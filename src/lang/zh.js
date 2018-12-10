@@ -79,7 +79,9 @@ export default {
     password: '密码',
     any: '随便填',
     thirdparty: '第三方登录',
-    thirdpartyTips: '本地不能模拟，请结合自己业务进行模拟！！！'
+    thirdpartyTips: '本地不能模拟，请结合自己业务进行模拟！！！',
+    usernameValidMsg: '请输入正确的11位电话号码',
+    passwordValidMsg: '请输入至少6位由字母和数字组成的密码'
   },
   documentation: {
     documentation: '文档',

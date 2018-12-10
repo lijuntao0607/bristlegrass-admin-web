@@ -2,12 +2,19 @@ import request from '@/utils/request'
 
 export function loginByUsername(username, password) {
   const data = {
-    username,
-    password
+    loginName: username,
+    password: password
   }
+  // const baseURL = process.env.BASE_API
   return request({
-    url: '/login/login',
+    url: '/user/sign-in',
     method: 'post',
+    headers: {
+      'DEVICE-ID': 'firefox',
+      'DEVICE-TYPE': 'web',
+      'OS': 'win',
+      'OS-VERSION': '1'
+    },
     data
   })
 }

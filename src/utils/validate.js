@@ -13,6 +13,12 @@ export function validateURL(textval) {
   return urlregex.test(textval)
 }
 
+/* 电话号码 */
+export function validatePhone(str) {
+  const phoneRegex = /^[1][3,4,5,7,8][0-9]{9}$/
+  return phoneRegex.test(str)
+}
+
 /* 小写字母*/
 export function validateLowerCase(str) {
   const reg = /^[a-z]+$/
