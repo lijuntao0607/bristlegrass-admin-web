@@ -1,5 +1,14 @@
 export default {
+  global: {
+    search: '搜索',
+    add: '添加',
+    edit: '编辑',
+    number: '序号'
+  },
   route: {
+    crawler: '爬虫任务管理',
+    crawlerList: '爬虫列表',
+    globalParam: '全局参数',
     dashboard: '首页',
     introduction: '简述',
     documentation: '文档',
@@ -154,5 +163,27 @@ export default {
     close: '关闭',
     closeOthers: '关闭其它',
     closeAll: '关闭所有'
+  },
+  crawler: {
+    crawlerName: '爬虫名称',
+    description: '描述',
+    source: '目标站点',
+    className: '类名',
+    industry: '行业分类',
+    lookJob: '任务',
+    lookParam: '参数',
+    paramName: '参数名',
+    paramDesc: '描述',
+    paramValue: '参数值',
+    startJob: '启动任务',
+    stopJob: '停止任务',
+    cancel: '取消',
+    confirm: '确定',
+    detail: '详细',
+    jobStatus: '状态',
+    startTime: '任务开始时间',
+    finishTime: '任务完成时间',
+    quantity: '爬取数量',
+    paramNameOrDesc: '参数名或描述'
   }
 }

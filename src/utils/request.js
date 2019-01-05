@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
+import { Message, MessageBox } from 'element-ui'
 
 // create an axios instance
 const service = axios.create({
@@ -28,7 +28,46 @@ service.interceptors.request.use(
 
 // response interceptor
 service.interceptors.response.use(
-  response => response,
+  response => {
+    console.log(response)
+    // const res = response.data
+    if (response.status === 200) {
+      if (response.data.success === true) {
+        return response
+      } else if (response.data.resultCode === 'auth-token-time-out' ||
+      response.data.resultCode === 'invalid-auth-token' || response.data.resultCode === 'auth.token-error') {
+        MessageBox.confirm('你已被登出，可以取消继续留在该页面，或者重新登录', '确定登出', {
+          confirmButtonText: '重新登录',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          store.dispatch('FedLogOut').then(() => {
+            location.reload() // 为了重新实例化vue-router对象 避免bug
+          })
+        })
+      } else {
+        Message({
+          message: response.data.errorMsg,
+          type: 'error'
+        })
+        return Promise.reject('error')
+      }
+    } else {
+      if (response.data.resultCode === 'auth-token-time-out' ||
+      response.data.resultCode === 'invalid-auth-token') {
+        Message.confirm('你已被登出，可以取消继续留在该页面，或者重新登录', '确定登出', {
+          confirmButtonText: '重新登录',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          store.dispatch('FedLogOut').then(() => {
+            location.reload() // 为了重新实例化vue-router对象 避免bug
+          })
+        })
+      }
+      return response.data
+    }
+  },
   /**
    * 下面的注释为通过在response里，自定义code来标示请求状态
    * 当code返回如下情况则说明权限有问题，登出并返回到登录页

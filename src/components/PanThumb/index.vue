@@ -15,7 +15,7 @@ export default {
   props: {
     image: {
       type: String,
-      required: true
+      default: '@/assets/default_avatar.gif'
     },
     zIndex: {
       type: Number,

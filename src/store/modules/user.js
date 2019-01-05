@@ -54,7 +54,7 @@ const user = {
             reject(result.errorMsg)
           }
           commit('SET_TOKEN', result.data.token)
-          commit('SET_ROLES', ['admin'])
+          // commit('SET_ROLES', ['admin'])
           commit('SET_NAME', result.data.name)
           commit('SET_AVATAR', result.data.avatar)
           commit('SET_INTRODUCTION', '')
