@@ -88,6 +88,7 @@
           <template slot-scope="scope">
             <template v-if="scope.row.edit">
               <el-input v-model="scope.row.paramDescTmp" class="edit-input" size="small"/>
+
             </template>
             <span v-else>{{ scope.row.paramDesc }}</span>
           </template>
@@ -95,7 +96,15 @@
         <el-table-column :label="$t('crawler.paramValue')" min-width="110px" align="center">
           <template slot-scope="scope">
             <template v-if="scope.row.edit">
-              <el-input v-model="scope.row.paramValueTmp" class="edit-input" size="small"/>
+              <template v-if="scope.row.type === 'enums'">
+                <el-select v-model="scope.row.paramValueTmp" placeholder="请选择">
+                  <el-option
+                    v-for="item in scope.row.values"
+                    :key="item"
+                    :value="item" />
+                </el-select>
+              </template>
+              <el-input v-else v-model="scope.row.paramValueTmp" class="edit-input" size="small"/>
             </template>
             <span v-else>{{ scope.row.paramValue }}</span>
           </template>
@@ -189,7 +198,9 @@ export default {
         id: undefined,
         paramName: '',
         paramDesc: '',
-        paramValue: ''
+        paramValue: '',
+        type: '',
+        values: []
       },
       dialogFormVisible: false,
       paramDialogVisible: false,

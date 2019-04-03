@@ -8,6 +8,9 @@ export default {
   route: {
     crawler: '爬虫任务管理',
     crawlerList: '爬虫列表',
+    travel: '狗尾草旅行',
+    dstList: '目的地',
+    scenicSpotList: '景点',
     globalParam: '全局参数',
     dashboard: '首页',
     introduction: '简述',
@@ -185,5 +188,10 @@ export default {
     finishTime: '任务完成时间',
     quantity: '爬取数量',
     paramNameOrDesc: '参数名或描述'
+  },
+  travel: {
+    mddList: '目的地',
+    query_name: '名称',
+    query_name_placeholder: '输入目的地查询'
   }
 }
