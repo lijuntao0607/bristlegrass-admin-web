@@ -3,7 +3,8 @@ export default {
     search: '搜索',
     add: '添加',
     edit: '编辑',
-    number: '序号'
+    number: '序号',
+    detail: '详细'
   },
   route: {
     crawler: '爬虫任务管理',
@@ -191,7 +192,13 @@ export default {
   },
   travel: {
     mddList: '目的地',
-    query_name: '名称',
-    query_name_placeholder: '输入目的地查询'
+    queryName: '名称',
+    queryNamePlaceholder: '输入目的地查询',
+    dstName: '目的地',
+    dstEnName: '英文名',
+    dstIntro: '简介',
+    dstBestDate: '最佳游玩时间',
+    dstDays: '建议游玩时间',
+    dstGrade: '评分'
   }
 }

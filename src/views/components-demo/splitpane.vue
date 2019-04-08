@@ -6,7 +6,7 @@
       <a href="https://github.com/PanJiaChen/vue-split-pane" target="_blank"> Github repository</a>
     </code>
     <split-pane split="vertical" @resize="resize">
-      <template slot="paneL">
+      <template slot="paneL" style="width:30%;">
         <div class="left-container"/>
       </template>
       <template slot="paneR">
