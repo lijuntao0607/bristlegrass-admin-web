@@ -11,12 +11,22 @@ export function getDstTree(parentId) {
     params: data
   })
 }
-export function getDstPage(parentId) {
+export function getDstPage(query) {
   const data = {
-    parentId: parentId
+    name: query.name,
+    parentId: query.parentId,
+    page: query.page,
+    size: query.size
   }
   return request({
     url: '/dst/page',
+    method: 'post',
+    data
+  })
+}
+export function saveDst(data) {
+  return request({
+    url: '/dst/save',
     method: 'post',
     data
   })

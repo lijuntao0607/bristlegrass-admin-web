@@ -1,10 +1,17 @@
 export default {
   global: {
-    search: '搜索',
-    add: '添加',
-    edit: '编辑',
+    search: '搜 索',
+    add: '添 加',
+    edit: '编 辑',
     number: '序号',
-    detail: '详细'
+    detail: '详细',
+    name: '名称',
+    enName: '英文名',
+    position: '定位',
+    img: '首页图',
+    delete: '删除',
+    cancel: '取 消',
+    confirm: '确 定'
   },
   route: {
     crawler: '爬虫任务管理',
@@ -199,6 +206,17 @@ export default {
     dstIntro: '简介',
     dstBestDate: '最佳游玩时间',
     dstDays: '建议游玩时间',
-    dstGrade: '评分'
+    dstGrade: '评分',
+    dstNamePlaceHolder: '请输入目的地名称',
+    dstEnNamePlaceHolder: '请输入目的地英文名称',
+    intro: '简介',
+    bestDate: '最佳时间',
+    days: '建议游玩时间',
+    climate: '当地气候',
+    lang: '语言',
+    mores: '风俗禁忌',
+    grade: '评分',
+    position: '定位',
+    scenicSpot: '景点'
   }
 }

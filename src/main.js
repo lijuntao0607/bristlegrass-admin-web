@@ -20,7 +20,16 @@ import './permission' // permission control
 // import './mock' // simulation data
 
 import * as filters from './filters' // global filters
-
+import AMap from 'vue-amap'
+Vue.use(AMap)
+// 初始化vue-amap
+AMap.initAMapApiLoader({
+  // 高德key
+  key: '0376c712b4005ecd72c093f3b65327f4',
+  // 插件集合 （插件按需引入）
+  plugin: ['AMap.Autocomplete', 'AMap.PlaceSearch', 'AMap.Scale', 'AMap.OverView', 'AMap.ToolBar', 'AMap.MapType', 'AMap.PolyEditor', 'AMap.CircleEditor'],
+  v: '1.4.14'
+})
 Vue.use(Element, {
   size: Cookies.get('size') || 'medium', // set element-ui default size
   i18n: (key, value) => i18n.t(key, value)
