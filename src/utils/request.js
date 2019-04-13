@@ -29,10 +29,13 @@ service.interceptors.request.use(
 // response interceptor
 service.interceptors.response.use(
   response => {
-    console.log(response)
     // const res = response.data
     if (response.status === 200) {
       if (response.data.success === true) {
+        const url = response.request.responseURL
+        if (url.indexOf('add') > 0 || url.indexOf('edit') > 0 || url.indexOf('save') > 0) {
+          Message.success('操作成功')
+        }
         return response
       } else if (response.data.resultCode === 'auth-token-time-out' ||
       response.data.resultCode === 'invalid-auth-token' || response.data.resultCode === 'auth.token-error') {

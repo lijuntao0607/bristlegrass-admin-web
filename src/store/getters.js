@@ -1,3 +1,4 @@
+import store from '@/store/index'
 const getters = {
   sidebar: state => state.app.sidebar,
   language: state => state.app.language,
@@ -14,6 +15,18 @@ const getters = {
   setting: state => state.user.setting,
   permission_routers: state => state.permission.routers,
   addRouters: state => state.permission.addRouters,
-  errorLogs: state => state.errorLog.logs
+  errorLogs: state => state.errorLog.logs,
+  getDict: state => (name, callback) => {
+    if (!state.dict.dictList[name]) {
+      store.dispatch('loadDict', name).then((data) => {
+        callback(data)
+      }).catch(errMsg => {
+        this.$message.error(errMsg)
+      })
+    } else {
+      callback(state.dict.dictList[name])
+    }
+    return state.dict.dictList[name]
+  }
 }
 export default getters

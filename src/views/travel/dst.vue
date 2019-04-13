@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input :placeholder="$t('travel.queryNamePlaceholder')" v-model="listQuery.name" style="width: 200px;" class="filter-item" @keyup.enter.native="showCreateDialog"/>
+      <el-input :placeholder="$t('travel.queryNamePlaceholder')" v-model="listQuery.name" style="width: 200px;" class="filter-item" clearable @keyup.enter.native="showCreateDialog"/>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="query">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="showCreateDialog">{{ $t('table.add') }}</el-button>
     </div>
@@ -25,32 +25,32 @@
               {{ scope.$index + 1 }}
             </template>
           </el-table-column>
-          <el-table-column :label="$t('travel.dstName')" width="100px" align="center">
+          <el-table-column :label="$t('travel.name')" width="100px" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.name }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('travel.dstEnName')" min-width="100px">
+          <el-table-column :label="$t('travel.enName')" min-width="100px">
             <template slot-scope="scope">
               <span>{{ scope.row.enName }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('travel.dstIntro')" min-width="200px" align="center">
+          <el-table-column :label="$t('travel.intro')" min-width="200px" align="center">
             <template slot-scope="scope">
               <span>{{ subInfo(scope.row.subIntro) }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('travel.dstBestDate')" width="150px">
+          <el-table-column :label="$t('travel.bestDate')" width="150px">
             <template slot-scope="scope">
               <span>{{ subInfo(scope.row.bestDate) }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('travel.dstDays')" min-width="120px" align="center">
+          <el-table-column :label="$t('travel.days')" min-width="120px" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.days }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('travel.dstGrade')" min-width="65px" align="center">
+          <el-table-column :label="$t('travel.grade')" min-width="65px" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.grade === -1? "" : scope.row.grade / 100 }}</span>
             </template>
@@ -58,15 +58,15 @@
           <el-table-column :label="$t('table.actions')" align="center" min-width="80" class-name="small-padding fixed-width">
             <template slot-scope="scope">
               <el-button type="primary" icon="el-icon-info" width="" @click="openDetailDialog(scope.row)"/>
-              <el-button type="danger" icon="el-icon-delete" width="" @click="openDetailDialog(scope.row)"/>
+              <el-button :loading="scope.row.deleteLoading" type="danger" icon="el-icon-delete" width="" @click="deleteDst(scope.row)"/>
             </template>
           </el-table-column>
         </el-table>
 
         <pagination v-show="total>0" :total="total" :page-size="listQuery.pageSize" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
-        <el-dialog v-loading="dialogLoading" :title="$t('global.detail')" :visible.sync="detailDialogVisible">
-          <el-form ref="dataForm" :rules="rules" :model="tmpDst" label-position="left" label-width="70px" style="width: 600px; margin-left:50px;">
+        <el-dialog :title="$t('global.detail')" :visible.sync="detailDialogVisible">
+          <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 600px; margin-left:50px;">
             <el-form-item :label="$t('global.img')" prop="img">
               <div v-if="dialogStatus==='show'">{{ '1' }}</div>
               <el-input v-else :placeholder="$t('global.img')" v-model="temp.img"/>
@@ -82,22 +82,29 @@
             </el-form-item>
             <el-form-item :label="$t('global.name')" prop="name">
               <div v-if="dialogStatus==='show'">{{ temp.name }}</div>
-              <el-input v-else :placeholder="$t('travel.dstNamePlaceHolder')" v-model="temp.name"/>
+              <el-input v-else :placeholder="$t('travel.namePlaceHolder')" v-model="temp.name"/>
             </el-form-item>
-            <el-form-item :label="$t('global.enName')" prop="enName">
+            <el-form-item :label="$t('global.enName')" prop="fifty">
               <div v-if="dialogStatus==='show'">{{ temp.enName }}</div>
-              <el-input v-else :placeholder="$t('travel.dstEnNamePlaceHolder')" v-model="temp.enName"/>
+              <el-input v-else :placeholder="$t('travel.enNamePlaceHolder')" v-model="temp.enName"/>
+            </el-form-item>
+            <el-form-item :label="$t('travel.parentDst')" prop="parentId">
+              <div v-if="dialogStatus==='show'">{{ temp.parentName }}</div>
+              <tree-selector v-else :placeholder="$t('travel.parentPlaceHolder')" :load="loadDialogTreeData" :dialog-loading="treeDialogLoading" :show-prop.sync="temp.parentName" :selecting-node="selectingNode" :value.sync="temp.parentId" node-label="name" node-value="id" height="250px"/>
             </el-form-item>
             <el-form-item :label="$t('travel.position')" :class="dialogStatus==='show'?'amap-dst-show':'amap-dst-edit-item'">
               <!-- <div id="container-map" style="width:500px; height:200px"/>
               <button @click="addTool">加载</button>
               <input id="input_id" type="text">
               <span>{{ chosePosition }}</span> -->
-              <el-input :value="temp.latitude+','+temp.longitude"/><span>右击地图更新目的地定位坐标</span>
+              <div v-if="dialogStatus==='show'">{{ temp.latitude? (temp.latitude+','+temp.longitude): '' }}</div>
+              <el-tooltip v-else :disabled="dialogStatus==='show'" content="右键点击地图更新定位坐标" placement="right" effect="light">
+                <el-input :value="temp.latitude? (temp.latitude+','+temp.longitude): ''"/>
+              </el-tooltip>
               <el-amap-search-box v-if="dialogStatus!=='show'" :search-option="searchOption" :on-search-result="onSearchResult" class="search-box"/>
               <el-amap :center="mapCenter" :zoom="12" :events="mapEvents" :class="dialogStatus==='show'?'amap-dst-show':'amap-dst-edit'" vid="amapDemo">
                 <el-amap-marker :position="mapCenter" vid="component-marker"/>
-                <el-amap-info-window ref="dst-pos-info-window" :visible="showPosWindow" :position="newPosition">
+                <el-amap-info-window ref="dst-pos-info-window" :visible="showPosWindow" :position="newPosition" :close-when-click-map="closeWhenClickMap">
                   <div :style="slotStyle">
                     <b>确定将{{ temp.name }}定位更新</b>
                     <button @click="confirmPosition">{{ $t('global.confirm') }}</button>
@@ -105,34 +112,34 @@
                 </el-amap-info-window>
               </el-amap>
             </el-form-item>
-            <el-form-item :label="$t('travel.intro')" prop="intro">
+            <el-form-item :label="$t('travel.intro')" prop="twoThousand">
               <div v-if="dialogStatus==='show'">{{ temp.intro }}</div>
               <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.intro" type="textarea"/>
             </el-form-item>
-            <el-form-item :label="$t('travel.bestDate')" prop="bestDate">
+            <el-form-item :label="$t('travel.bestDate')" prop="twoThousand">
               <div v-if="dialogStatus==='show'">{{ temp.bestDate }}</div>
               <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.bestDate" type="textarea"/>
             </el-form-item>
-            <el-form-item :label="$t('travel.days')" prop="days">
+            <el-form-item :label="$t('travel.days')" prop="twoThousand">
               <div v-if="dialogStatus==='show'">{{ temp.days }}</div>
               <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.days" type="textarea"/>
             </el-form-item>
-            <el-form-item :label="$t('travel.climate')" prop="climate">
+            <el-form-item :label="$t('travel.climate')" prop="twoThousand">
               <div v-if="dialogStatus==='show'">{{ temp.climate }}</div>
               <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.climate" type="textarea"/>
             </el-form-item>
-            <el-form-item :label="$t('travel.lang')" prop="lang">
+            <el-form-item :label="$t('travel.lang')" prop="twoThousand">
               <div v-if="dialogStatus==='show'">{{ temp.lang }}</div>
               <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.lang" type="textarea"/>
             </el-form-item>
-            <el-form-item :label="$t('travel.mores')" prop="mores">
+            <el-form-item :label="$t('travel.mores')" prop="twoThousand">
               <div v-if="dialogStatus==='show'">{{ temp.mores }}</div>
               <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.mores" type="textarea"/>
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
             <el-button @click="detailDialogVisible = false">{{ $t('global.cancel') }}</el-button>
-            <el-button type="primary" @click="saveDst()">
+            <el-button :loading="commitLoading" type="primary" @click="saveDst()">
               {{ dialogStatus==='show'? $t('global.edit'): $t('global.confirm') }}
             </el-button>
           </div>
@@ -148,30 +155,32 @@
   Created: 2019/4/10-14:54
 */
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
-import { getDstTree, getDstPage, saveDst } from '@/api/travel'
-import treeToArray from './customEval'
+import { Message } from 'element-ui'
+import TreeSelector from '@/components/TreeSelector'
+import { getDstTree, getDstPage, saveDst, deleteDst } from '@/api/travel'
 import waves from '@/directive/waves' // Waves directive
 // import AMap from 'AMap'
-
+let dstPage
 export default {
   name: 'DestinationList',
-  components: { Pagination },
+  components: { Pagination, TreeSelector },
   directives: { waves },
   data() {
     return {
       map: null,
       dialogStatus: '',
       detailDialogVisible: false,
+      closeWhenClickMap: true,
       tableKey: 0,
       total: 0,
       listLoading: false,
       dialogLoading: false,
-      func: treeToArray,
+      commitLoading: false,
+      treeDialogLoading: false,
       expandAll: false,
       dstQuery: {
         name: ''
       },
-      tmpDst: {},
       data: [],
       list: [],
       listQuery: {
@@ -187,7 +196,13 @@ export default {
         label: 'name'
       },
       rules: {
-        name: [{ required: true, message: '名称不能为空', trigger: 'change' }]
+        name: [
+          { required: true, message: '不能为空', trigger: 'blur' },
+          { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+        ],
+        fifty: [{ min: 0, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }],
+        twoThousand: [{ min: 0, max: 2000, message: '长度必须小于2000字符', trigger: 'blur' }],
+        img: [{ min: 0, max: 700, message: '长度必须小于700字符', trigger: 'blur' }]
       },
       currentPosition: {
         location: '',
@@ -245,6 +260,7 @@ export default {
   created() {
     // this.loadTreeNode()
     this.getList()
+    dstPage = this
   },
   mounted() {
   },
@@ -266,10 +282,19 @@ export default {
       if (this.dialogStatus !== 'edit') {
         this.dialogStatus = 'edit'
       } else {
-        this.dialogLoading = true
-        saveDst(this.temp).then(response => {
-          this.dialogLoading = this.detailDialogVisible = false
-          this.getList()
+        this.$refs.dataForm.validate(valid => {
+          if (valid) {
+            this.commitLoading = true
+            saveDst(this.temp).then(response => {
+              this.getList()
+              this.commitLoading = this.detailDialogVisible = false
+            }, () => {
+              this.commitLoading = false
+            })
+          } else {
+            this.$message.warning('操作失败，请检查')
+            return false
+          }
         })
       }
     },
@@ -288,6 +313,16 @@ export default {
         this.initMap()
       })
       this.closeMapInfoWindow()
+    },
+    deleteDst(row) {
+      row.deleteLoading = true
+      deleteDst(row.id).then(response => {
+        this.getList()
+        this.loadTreeNodeData()
+        row.deleteLoading = false
+      }, () => {
+        row.deleteLoading = false
+      })
     },
     initMap() {
       // this.map = new AMap.Map('container-map', {
@@ -362,6 +397,7 @@ export default {
         this.list = response.data.data.records
         for (let i = 0; i < this.list.length; i++) {
           const data = this.list[i]
+          data.deleteLoading = false
           if (data.intro && data.intro.length > 100) {
             data.subIntro = data.intro.slice(0, 100) + '...'
           } else {
@@ -383,6 +419,19 @@ export default {
           }
         }
       })
+    },
+    loadDialogTreeData(node, resolve) {
+      getDstTree(node ? node.data.id : null).then(response => {
+        resolve(response.data.data.slice(0, 100))
+      })
+    },
+    selectingNode: node => {
+      if (node.id === dstPage.temp.id || node.path.indexOf(dstPage.temp.id) > 0) {
+        Message.error('不能选择自己或子孙节点')
+        return false
+      } else {
+        return true
+      }
     }
   }
 }

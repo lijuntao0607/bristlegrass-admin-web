@@ -14,6 +14,8 @@ export default {
     confirm: '确 定'
   },
   route: {
+    dict: '字典',
+    system: '系统',
     crawler: '爬虫任务管理',
     crawlerList: '爬虫列表',
     travel: '狗尾草旅行',
@@ -202,13 +204,10 @@ export default {
     queryName: '名称',
     queryNamePlaceholder: '输入目的地查询',
     dstName: '目的地',
-    dstEnName: '英文名',
-    dstIntro: '简介',
-    dstBestDate: '最佳游玩时间',
-    dstDays: '建议游玩时间',
-    dstGrade: '评分',
-    dstNamePlaceHolder: '请输入目的地名称',
-    dstEnNamePlaceHolder: '请输入目的地英文名称',
+    name: '名称',
+    enName: '英文名',
+    namePlaceHolder: '请输入名称',
+    enNamePlaceHolder: '请输入英文名称',
     intro: '简介',
     bestDate: '最佳时间',
     days: '建议游玩时间',
@@ -217,6 +216,24 @@ export default {
     mores: '风俗禁忌',
     grade: '评分',
     position: '定位',
-    scenicSpot: '景点'
+    scenicSpot: '景点',
+    parentDst: '父节点',
+    parentPlaceHolder: '请选择父节点',
+    destinationPlaceHolder: '请选择所属目的地',
+    type: '类型'
+  },
+  dict: {
+    dict: '字典',
+    searchText: '字典名或描述',
+    dictName: '字典名',
+    dictDesc: '字典描述',
+    dictItemName: '字典项',
+    dictItemValue: '字典项说明',
+    dictItemRemark: '字典项备注',
+    dictItemSize: '字典项数量',
+    dictItemNum: '字典项顺序',
+    dictItemVisible: '可见',
+    dictType: '类型',
+    client: '所属应用'
   }
 }

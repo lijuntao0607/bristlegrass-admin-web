@@ -14,6 +14,7 @@ import nestedRouter from './modules/nested'
 
 import crawlerRouter from './modules/crawler.js'
 import travelRoute from './modules/travel.js'
+import systemRouter from './modules/system.js'
 
 /** note: Submenu only appear when children.length>=1
  *  detail see  https://panjiachen.github.io/vue-element-admin-site/guide/essentials/router-and-nav.html
@@ -115,6 +116,7 @@ export default new Router({
 export const asyncRouterMap = [
   crawlerRouter,
   travelRoute,
+  systemRouter,
   {
     path: '/permission',
     component: Layout,

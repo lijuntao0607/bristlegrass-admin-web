@@ -12,16 +12,10 @@ export function getDstTree(parentId) {
   })
 }
 export function getDstPage(query) {
-  const data = {
-    name: query.name,
-    parentId: query.parentId,
-    page: query.page,
-    size: query.size
-  }
   return request({
     url: '/dst/page',
     method: 'post',
-    data
+    data: query
   })
 }
 export function saveDst(data) {
@@ -29,5 +23,54 @@ export function saveDst(data) {
     url: '/dst/save',
     method: 'post',
     data
+  })
+}
+export function deleteDst(id) {
+  return request({
+    url: `/dst/${id}/delete`,
+    method: 'delete'
+  })
+}
+export function getScenicSpotPage(query) {
+  return request({
+    url: '/scenic-spot/page',
+    method: 'post',
+    data: query
+  })
+}
+export function saveScenicSpot(data) {
+  return request({
+    url: '/scenic-spot/save',
+    method: 'post',
+    data
+  })
+}
+export function deleteScenicSpot(id) {
+  return request({
+    url: `/scenic-spot/${id}/delete`,
+    method: 'delete'
+  })
+}
+/**
+ * 路线
+ */
+export function getRouteLinePage(query) {
+  return request({
+    url: '/route-line/page',
+    method: 'post',
+    data: query
+  })
+}
+export function saveRouteLine(data) {
+  return request({
+    url: '/route-line/save',
+    method: 'post',
+    data
+  })
+}
+export function deleteRouteLine(id) {
+  return request({
+    url: `/route-line/${id}/delete`,
+    method: 'delete'
   })
 }
