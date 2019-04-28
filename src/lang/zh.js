@@ -218,7 +218,9 @@ export default {
     position: '定位',
     scenicSpot: '景点',
     parentDst: '父节点',
+    parentScenicSpot: '所属景点',
     parentPlaceHolder: '请选择父节点',
+    parentScenicSpotPlaceHolder: '请选择所属景点',
     destinationPlaceHolder: '请选择所属目的地',
     type: '类型'
   },

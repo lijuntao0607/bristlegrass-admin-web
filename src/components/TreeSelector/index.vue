@@ -105,6 +105,7 @@ export default {
         this.dialogVisible = false
         this.$emit('update:showProp', this.currentNode[this.nodeLabel])
         this.$emit('update:value', this.currentNode[this.nodeValue])
+        this.$emit('selected')
       }
       // console.log(this.$refs['inputText'].val)
     }

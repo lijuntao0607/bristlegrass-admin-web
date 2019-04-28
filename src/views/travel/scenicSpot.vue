@@ -94,12 +94,26 @@
               <el-input v-else :placeholder="$t('travel.enNamePlaceHolder')" v-model="temp.enName"/>
             </el-form-item>
             <el-form-item :label="$t('travel.parentDst')" prop="destinationId">
-              <div v-if="dialogStatus==='show'">{{ temp.parentName }}</div>
-              <tree-selector v-else :placeholder="$t('travel.parentPlaceHolder')" :load="loadDialogTreeData" :dialog-loading="treeDialogLoading" :show-prop.sync="temp.parentName" :selecting-node="selectingNode" :value.sync="temp.destinationId" node-label="name" node-value="id" height="250px"/>
+              <div v-if="dialogStatus==='show'">{{ temp.destinationName }}</div>
+              <tree-selector
+                v-else
+                :placeholder="$t('travel.parentPlaceHolder')"
+                :load="loadDialogTreeData"
+                :dialog-loading="treeDialogLoading"
+                :show-prop.sync="temp.destinationName"
+                :selecting-node="selectingNode"
+                :value.sync="temp.destinationId"
+                node-label="name"
+                node-value="id"
+                height="250px"
+                @selected="destinationSelected"
+              />
             </el-form-item>
             <el-form-item :label="$t('travel.parentDst')" prop="destinationId">
               <div v-if="dialogStatus==='show'">{{ temp.parentName }}</div>
-              <tree-selector v-else :placeholder="$t('travel.destinationPlaceHolder')" :load="loadDialogTreeData" :dialog-loading="treeDialogLoading" :show-prop.sync="temp.parentName" :selecting-node="selectingNode" :value.sync="temp.destinationId" node-label="name" node-value="id" height="250px"/>
+              <el-select v-else v-model="temp.parentId" :placeholder="$t('travel.parentScenicSpot')" clearable class="filter-item">
+                <el-option v-for="item in scenicSpotList" :key="item.name" :label="item.value" :value="item.name"/>
+              </el-select>
             </el-form-item>
             <el-form-item :label="$t('travel.position')" :class="dialogStatus==='show'?'amap-dst-show':'amap-dst-edit-item'">
               <!-- <div id="container-map" style="width:500px; height:200px"/>
@@ -186,6 +200,7 @@ export default {
       dialogLoading: false,
       commitLoading: false,
       treeDialogLoading: false,
+      scenicSpotTreeDialogLoading: false,
       expandAll: false,
       dstQuery: {
         name: ''
@@ -233,6 +248,7 @@ export default {
         pageIndex: 2,
         lang: 'zh_cn'
       },
+      scenicSpotList: [],
       mapCenter: [121.59996, 31.197646],
       mapEvents: {
         init: (o) => {
@@ -275,6 +291,17 @@ export default {
   mounted() {
   },
   methods: {
+    destinationSelected() {
+      if (!this.temp.destinationId) {
+        return
+      }
+      getScenicSpotPage({
+        destinationId: this.temp.destinationId,
+        size: 100
+      }).then(response => {
+        this.scenicSpotList = response.data.data.records
+      })
+    },
     showCreateDialog() {
       this.detailDialogVisible = true
       this.dialogStatus = 'create'
@@ -319,9 +346,6 @@ export default {
       this.detailDialogVisible = true
       this.temp = row
       this.mapCenter = [this.temp.longitude, this.temp.latitude]
-      this.$nextTick(() => {
-        this.initMap()
-      })
       this.closeMapInfoWindow()
     },
     deleteScenicSpot(row) {
@@ -334,24 +358,6 @@ export default {
         row.deleteLoading = false
       })
     },
-    initMap() {
-      // this.map = new AMap.Map('container-map', {
-      //   resizeEnable: true,
-      //   zoom: 15,
-      //   viewMode: '2D',
-      //   zooms: [4, 18]
-      // })
-      // /* 添加工具条 */
-      // this.addTool()
-      // this.search()
-    },
-    /* 添加工具条 */
-    addTool() {
-      // AMap.plugin(['AMap.ToolBar', 'AMap.Driving'], () => {
-      //   const toolbar = new AMap.ToolBar()
-      //   this.map.addControl(toolbar)
-      // })
-    },
     onSearchResult(pois) {
       console.log(pois)
       if (pois.length > 0) {
@@ -361,27 +367,6 @@ export default {
         }
         this.mapCenter = [center.lng, center.lat]
       }
-    },
-    /* 搜索 */
-    search() {
-      // const vm = this
-      // AMap.plugin(['AMap.PlaceSearch', 'AMap.Autocomplete'], () => {
-      //   console.log('search')
-      //   var autoOptions = {
-      //     city: vm.citycode,
-      //     input: 'input_id'
-      //   }
-      //   // eslint-disable-next-line no-unused-vars
-      //   const autoComplete = new AMap.Autocomplete(autoOptions)
-      //   // eslint-disable-next-line no-unused-vars
-      //   const placeSearch = new AMap.PlaceSearch({
-      //     city: vm.citycode,
-      //     map: vm.map
-      //   })
-      //   AMap.event.addListener(autoComplete, 'select', e => {
-      //     console.log(e)
-      //   })
-      // })
     },
     subInfo(str) {
       if (str.length > 100) {
