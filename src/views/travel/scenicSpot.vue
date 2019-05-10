@@ -105,7 +105,7 @@
                 :value.sync="temp.destinationId"
                 node-label="name"
                 node-value="id"
-                height="250px"
+                height="350px"
                 @selected="destinationSelected"
               />
             </el-form-item>

@@ -1,9 +1,10 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input :placeholder="$t('travel.queryNamePlaceholder')" v-model="listQuery.name" style="width: 200px;" class="filter-item" clearable @keyup.enter.native="showCreateDialog"/>
+      <el-input :placeholder="$t('travel.queryNamePlaceholder')" v-model="listQuery.name" style="width: 200px;" class="filter-item" clearable @keyup.enter.native="query"/>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="query">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="showCreateDialog">{{ $t('table.add') }}</el-button>
+      <el-checkbox v-model="listQuery.listChildren" class="filter-item" style="margin-left:55px;" @change="getList">{{ $t('travel.children') }}</el-checkbox>
     </div>
     <el-container>
       <el-aside>
@@ -55,16 +56,21 @@
               <span>{{ scope.row.grade === -1? "" : scope.row.grade / 100 }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('table.actions')" align="center" min-width="80" class-name="small-padding fixed-width">
+          <el-table-column :label="$t('travel.parentDst')" min-width="65px" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.parentName }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column :label="$t('table.actions')" align="center" min-width="150" class-name="small-padding fixed-width">
             <template slot-scope="scope">
               <el-button type="primary" icon="el-icon-info" width="" @click="openDetailDialog(scope.row)"/>
+              <el-button type="primary" icon="el-icon-collection" width="" @click="openAncestorDialog(scope.row)"/>
               <el-button :loading="scope.row.deleteLoading" type="danger" icon="el-icon-delete" width="" @click="deleteDst(scope.row)"/>
             </template>
           </el-table-column>
         </el-table>
 
-        <pagination v-show="total>0" :total="total" :page-size="listQuery.pageSize" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
-
+        <pagination v-show="total>0" :total="total" :page-size="listQuery.size" :page.sync="listQuery.page" :limit.sync="listQuery.size" @pagination="getList" />
         <el-dialog :title="$t('global.detail')" :visible.sync="detailDialogVisible">
           <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 600px; margin-left:50px;">
             <el-form-item :label="$t('global.img')" prop="img">
@@ -144,6 +150,55 @@
             </el-button>
           </div>
         </el-dialog>
+        <el-dialog v-loading="ancestorLoading" :title="$t('travel.ancestorEdit')" :visible.sync="ancestorDialogVisible">
+          <el-table
+            :data="ancestorList"
+            border
+            fit
+            highlight-current-row
+            style="width: 100%;">
+            <el-table-column :label="$t('global.id')" width="50px" align="center">
+              <template slot-scope="scope">
+                <span>{{ scope.row.id }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('travel.name')" width="200px" align="center">
+              <template slot-scope="scope">
+                <span>{{ scope.row.name }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('travel.enName')" width="200px" align="center">
+              <template slot-scope="scope">
+                <span>{{ scope.row.enName }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('table.actions')" align="center" min-width="80" class-name="small-padding fixed-width">
+              <template slot-scope="scope">
+                <div style="display:flex; justify-content: center; align-items: center;">
+                  <tree-selector
+                    :placeholder="$t('travel.parentPlaceHolder')"
+                    :load="loadDialogTreeData"
+                    :dialog-loading="treeDialogLoading"
+                    :selecting-node="selectingAncestorNode"
+                    icon="el-icon-info"
+                    input-type="button"
+                    button-text="插入"
+                    node-label="name"
+                    node-value="id"
+                    @click="ancestorIndex=scope.$index"
+                    @selected="selectedNode"/>
+                  <el-button type="danger" icon="el-icon-delete" size="medium" style="height:35px;margin-left:10px;" @click="removeAncestor(scope.$index)">移除</el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div style="display: flex;justify-content: center;margin-top: 20px;">
+            <el-button @click="ancestorDialogVisible = false">{{ $t('global.cancel') }}</el-button>
+            <el-button :loading="commitLoading" type="primary" @click="saveAncestor">
+              {{ $t('global.confirm') }}
+            </el-button>
+          </div>
+        </el-dialog>
       </el-main>
     </el-container>
   </div>
@@ -157,7 +212,7 @@
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 import { Message } from 'element-ui'
 import TreeSelector from '@/components/TreeSelector'
-import { getDstTree, getDstPage, saveDst, deleteDst } from '@/api/travel'
+import { getDstTree, getDstPage, saveDst, deleteDst, getAncestor } from '@/api/travel'
 import waves from '@/directive/waves' // Waves directive
 // import AMap from 'AMap'
 let dstPage
@@ -170,12 +225,14 @@ export default {
       map: null,
       dialogStatus: '',
       detailDialogVisible: false,
+      ancestorDialogVisible: false,
       closeWhenClickMap: true,
       tableKey: 0,
       total: 0,
       listLoading: false,
       dialogLoading: false,
       commitLoading: false,
+      ancestorLoading: false,
       treeDialogLoading: false,
       expandAll: false,
       dstQuery: {
@@ -183,13 +240,17 @@ export default {
       },
       data: [],
       list: [],
+      ancestorList: [],
+      ancestorIndex: -1,
       listQuery: {
         size: 10,
         page: 1,
         parentId: null,
-        name: ''
+        name: '',
+        listChildren: false
       },
       temp: {},
+      tempAncestor: {},
       args: [null, null, 'timeLine'],
       defaultProps: {
         children: 'children',
@@ -304,6 +365,44 @@ export default {
       this.mapCenter = this.newPosition
       this.closeMapInfoWindow()
     },
+    saveAncestor() {
+      this.commitLoading = true
+      const tempDest = {
+        ...this.temp,
+        ancestor: []
+      }
+      // 这里只更新祖宗节点路径，不更新parentId， 所以设置为空
+      tempDest.parentId = null
+      for (let i = 0; i < this.ancestorList.length; i++) {
+        tempDest.ancestor.push(this.ancestorList[i].id)
+      }
+      saveDst(tempDest).then(response => {
+        this.getList()
+        this.commitLoading = this.ancestorDialogVisible = false
+      }, () => {
+        this.commitLoading = false
+      })
+    },
+    removeAncestor(index) {
+      this.$confirm('你确实要删除此节点?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.ancestorList.splice(index, 1)
+      })
+    },
+    openAncestorDialog(row) {
+      this.ancestorDialogVisible = true
+      this.ancestorLoading = true
+      this.temp = row
+      getAncestor(row.id).then(response => {
+        this.ancestorList = response.data.data
+        this.ancestorLoading = false
+      }).catch(e => {
+        this.ancestorLoading = false
+      })
+    },
     openDetailDialog(row) {
       this.dialogStatus = 'show'
       this.detailDialogVisible = true
@@ -316,12 +415,18 @@ export default {
     },
     deleteDst(row) {
       row.deleteLoading = true
-      deleteDst(row.id).then(response => {
-        this.getList()
-        this.loadTreeNodeData()
-        row.deleteLoading = false
-      }, () => {
-        row.deleteLoading = false
+      this.$confirm('你确实要删除此节点?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteDst(row.id).then(response => {
+          this.getList()
+          this.loadTreeNodeData()
+          row.deleteLoading = false
+        }, () => {
+          row.deleteLoading = false
+        })
       })
     },
     initMap() {
@@ -413,7 +518,7 @@ export default {
         if (node && node.data && node.data.id) {
           resolve(response.data.data)
         } else {
-          this.data = response.data.data.slice(0, 100)
+          this.data = response.data.data.slice(0, 300)
           for (let i = 0; i < this.data.length; i++) {
             this.data[i].children = [{}]
           }
@@ -422,7 +527,7 @@ export default {
     },
     loadDialogTreeData(node, resolve) {
       getDstTree(node ? node.data.id : null).then(response => {
-        resolve(response.data.data.slice(0, 100))
+        resolve(response.data.data.slice(0, 300))
       })
     },
     selectingNode: node => {
@@ -432,6 +537,18 @@ export default {
       } else {
         return true
       }
+    },
+    selectingAncestorNode: node => {
+      for (let i = 0; i < dstPage.ancestorList.length; i++) {
+        if (dstPage.ancestorList[i].id === node.id) {
+          Message.error('不能重复选择')
+          return false
+        }
+        return true
+      }
+    },
+    selectedNode: node => {
+      dstPage.ancestorList.splice(dstPage.ancestorIndex, 0, node)
     }
   }
 }

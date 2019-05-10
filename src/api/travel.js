@@ -51,6 +51,12 @@ export function deleteScenicSpot(id) {
     method: 'delete'
   })
 }
+export function getAncestor(id) {
+  return request({
+    url: `/dst/${id}/ancestor/list`,
+    method: 'get'
+  })
+}
 /**
  * 路线
  */

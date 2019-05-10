@@ -1,9 +1,13 @@
 <template>
   <div>
-    <el-input ref="inputText" :placeholder="placeholder" :value="showProp" readonly clearable>
+    <el-input v-if="inputType==='input'" ref="inputText" :placeholder="placeholder" :value="showProp" readonly clearable>
       <el-button slot="append" icon="el-icon-search" @click="openTreeDialog" @focus="openTreeDialog"/>
+      <el-input ref="inputValue" :value="value" type="hidden" style="display: hidden; height: 0px;"/>
     </el-input>
-    <el-input ref="inputValue" :value="value" type="hidden" class="display: hidden;"/>
+    <el-button v-else :icon="icon" @click="openTreeDialog" @focus="openTreeDialog">
+      {{ buttonText }}
+      <el-input ref="inputValue" :value="value" type="hidden" style="display: hidden; height: 0px;"/>
+    </el-button>
     <el-dialog v-loading="dialogLoading" :title="placeholder" :visible.sync="dialogVisible" :width="width" append-to-body>
       <el-scrollbar :style="'height:' + height + ';'">
         <el-tree :load="loadData" :data="data" :props="defaultProps" lazy @node-click="handleNodeClick"/>
@@ -30,6 +34,10 @@ export default {
     selectingNode: {
       type: Function,
       default: node => {}
+    },
+    inputType: {
+      type: String,
+      default: 'input'
     },
     placeholder: {
       type: String,
@@ -62,6 +70,14 @@ export default {
     dialogLoading: {
       type: Boolean,
       default: false
+    },
+    buttonText: {
+      type: String,
+      default: ''
+    },
+    icon: {
+      type: String,
+      default: 'el-icon-search'
     }
   },
   data() {
@@ -91,6 +107,7 @@ export default {
     },
     openTreeDialog() {
       this.dialogVisible = true
+      this.$emit('click')
     },
     loadTreeData() {
     },
@@ -105,7 +122,7 @@ export default {
         this.dialogVisible = false
         this.$emit('update:showProp', this.currentNode[this.nodeLabel])
         this.$emit('update:value', this.currentNode[this.nodeValue])
-        this.$emit('selected')
+        this.$emit('selected', this.currentNode)
       }
       // console.log(this.$refs['inputText'].val)
     }

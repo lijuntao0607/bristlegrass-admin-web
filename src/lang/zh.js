@@ -11,7 +11,8 @@ export default {
     img: '首页图',
     delete: '删除',
     cancel: '取 消',
-    confirm: '确 定'
+    confirm: '确 定',
+    id: 'ID'
   },
   route: {
     dict: '字典',
@@ -218,11 +219,13 @@ export default {
     position: '定位',
     scenicSpot: '景点',
     parentDst: '父节点',
+    children: '包含所有从属',
     parentScenicSpot: '所属景点',
     parentPlaceHolder: '请选择父节点',
     parentScenicSpotPlaceHolder: '请选择所属景点',
     destinationPlaceHolder: '请选择所属目的地',
-    type: '类型'
+    type: '类型',
+    ancestorEdit: '父节点编辑'
   },
   dict: {
     dict: '字典',
