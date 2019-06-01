@@ -9,7 +9,7 @@ const user = {
     token: getToken(),
     name: '',
     avatar: '',
-    introduction: '',
+    id: '',
     roles: [],
     setting: {
       articlePlatform: []
@@ -22,9 +22,6 @@ const user = {
     },
     SET_TOKEN: (state, token) => {
       state.token = token
-    },
-    SET_INTRODUCTION: (state, introduction) => {
-      state.introduction = introduction
     },
     SET_SETTING: (state, setting) => {
       state.setting = setting
@@ -40,6 +37,9 @@ const user = {
     },
     SET_ROLES: (state, roles) => {
       state.roles = roles
+    },
+    SET_ID: (state, id) => {
+      state.id = id
     }
   },
 
@@ -56,8 +56,8 @@ const user = {
           commit('SET_TOKEN', result.data.token)
           // commit('SET_ROLES', ['admin'])
           commit('SET_NAME', result.data.name)
+          commit('SET_ID', result.data.id)
           commit('SET_AVATAR', result.data.avatar)
-          commit('SET_INTRODUCTION', '')
           setToken(result.data.token)
           resolve()
         }).catch(error => {
@@ -73,13 +73,11 @@ const user = {
           if (!response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
             reject('error')
           }
-          const result = response.data
-
+          const result = response.data.data
           commit('SET_ROLES', ['admin'])
-
+          commit('SET_ID', result.id)
           commit('SET_NAME', result.name)
           commit('SET_AVATAR', result.avatar)
-
           resolve(response)
         }).catch(error => {
           reject(error)

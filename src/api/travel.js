@@ -25,6 +25,12 @@ export function saveDst(data) {
     data
   })
 }
+export function getDst(id) {
+  return request({
+    url: `/dst/${id}/detail`,
+    method: 'get'
+  })
+}
 export function deleteDst(id) {
   return request({
     url: `/dst/${id}/delete`,
@@ -43,6 +49,19 @@ export function saveScenicSpot(data) {
     url: '/scenic-spot/save',
     method: 'post',
     data
+  })
+}
+export function changeScenicSpotDst(data) {
+  return request({
+    url: '/scenic-spot/change-dst',
+    method: 'post',
+    data
+  })
+}
+export function getScenicSpot(id) {
+  return request({
+    url: `/scenic-spot/${id}/detail`,
+    method: 'get'
   })
 }
 export function deleteScenicSpot(id) {

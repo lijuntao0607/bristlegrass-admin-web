@@ -1,14 +1,20 @@
 <template>
-  <div>
+  <span>
     <el-input v-if="inputType==='input'" ref="inputText" :placeholder="placeholder" :value="showProp" readonly clearable>
       <el-button slot="append" icon="el-icon-search" @click="openTreeDialog" @focus="openTreeDialog"/>
       <el-input ref="inputValue" :value="value" type="hidden" style="display: hidden; height: 0px;"/>
     </el-input>
-    <el-button v-else :icon="icon" @click="openTreeDialog" @focus="openTreeDialog">
-      {{ buttonText }}
+    <el-link v-if="inputType==='link'" :underline="false" :icon="icon" @click="openTreeDialog" @focus="openTreeDialog">
+      <span>{{ buttonText }}</span>
+    </el-link>
+    <el-button v-if="inputType==='button'" :icon="icon" @click="openTreeDialog" @focus="openTreeDialog">
+      <span>{{ buttonText }}</span>
       <el-input ref="inputValue" :value="value" type="hidden" style="display: hidden; height: 0px;"/>
     </el-button>
     <el-dialog v-loading="dialogLoading" :title="placeholder" :visible.sync="dialogVisible" :width="width" append-to-body>
+      <el-input v-if="queryData" v-model="queryName" clearable @keyup.enter.native="queryTreeData(queryName)">
+        <el-button slot="append" icon="el-icon-search" @click="queryTreeData(queryName)"/>
+      </el-input>
       <el-scrollbar :style="'height:' + height + ';'">
         <el-tree :load="loadData" :data="data" :props="defaultProps" lazy @node-click="handleNodeClick"/>
       </el-scrollbar>
@@ -19,7 +25,7 @@
         </el-button>
       </div>
     </el-dialog>
-  </div>
+  </span>
 </template>
 
 <script>
@@ -31,9 +37,15 @@ export default {
       default: (node, resolve) => {
       }
     },
+    queryData: {
+      type: Function,
+      default: undefined
+    },
     selectingNode: {
       type: Function,
-      default: node => {}
+      default: node => {
+        return true
+      }
     },
     inputType: {
       type: String,
@@ -88,7 +100,8 @@ export default {
         children: 'children',
         label: 'name'
       },
-      currentNode: null
+      currentNode: null,
+      queryName: ''
     }
   },
   mounted() {
@@ -99,6 +112,18 @@ export default {
   destroyed() {
   },
   methods: {
+    queryTreeData(queryText) {
+      if (!queryText) {
+        this.loadData(-1, this.queryResolve)
+        return
+      }
+      if (this.queryData) {
+        this.queryData(queryText, this.queryResolve)
+      }
+    },
+    queryResolve(list) {
+      this.data = list
+    },
     loadData(node, resolve) {
       // this.dialogLoading = true
       if (this.load) {

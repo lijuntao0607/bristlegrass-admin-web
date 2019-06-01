@@ -1,7 +1,7 @@
 import { getDictItems } from '@/api/system'
 const dict = {
   state: {
-    dictList: []
+    dictList: {}
   },
   mutations: {
     SET_DICT_LIST: (state, data) => {

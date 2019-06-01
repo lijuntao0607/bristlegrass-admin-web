@@ -21,19 +21,23 @@
           fit
           highlight-current-row
           style="width: 100%;">
-          <el-table-column :label="$t('table.id')" prop="id" sortable="custom" align="center" width="65">
+          <el-table-column :label="$t('travel.thumbnail')" sortable="custom" align="center" width="120">
             <template slot-scope="scope">
-              {{ scope.$index + 1 }}
+              <el-link :underline="false" type="primary" @click="openDetailDialog(scope.row)">
+                <el-image
+                  :src="'https://' + bucket + '.' + domain + '/' + scope.row.img + '-thumbnail'"
+                  style="width: 100px;" />
+              </el-link>
             </template>
           </el-table-column>
           <el-table-column :label="$t('travel.name')" width="100px" align="center">
             <template slot-scope="scope">
-              <span>{{ scope.row.name }}</span>
+              <el-link :underline="false" type="primary" @click="openDetailDialog(scope.row)">{{ scope.row.name }}</el-link>
             </template>
           </el-table-column>
           <el-table-column :label="$t('travel.enName')" min-width="100px">
             <template slot-scope="scope">
-              <span>{{ scope.row.enName }}</span>
+              <el-link :underline="false" type="primary" @click="openDetailDialog(scope.row)">{{ scope.row.enName }}</el-link>
             </template>
           </el-table-column>
           <el-table-column :label="$t('travel.intro')" min-width="200px" align="center">
@@ -51,40 +55,47 @@
               <span>{{ scope.row.days }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('travel.grade')" min-width="65px" align="center">
-            <template slot-scope="scope">
-              <span>{{ scope.row.grade === -1? "" : scope.row.grade / 100 }}</span>
-            </template>
-          </el-table-column>
           <el-table-column :label="$t('travel.parentDst')" min-width="65px" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.parentName }}</span>
             </template>
           </el-table-column>
+          <!-- <el-table-column :label="$t('travel.grade')" min-width="65px" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.grade === -1? "" : scope.row.grade / 100 }}</span>
+            </template>
+          </el-table-column> -->
+          <el-table-column :label="$t('travel.layer')" min-width="65px" align="center">
+            <template slot-scope="scope">
+              <span>{{ getValue('stateLayer', scope.row.layer) }}</span>
+            </template>
+          </el-table-column>
           <el-table-column :label="$t('table.actions')" align="center" min-width="150" class-name="small-padding fixed-width">
             <template slot-scope="scope">
-              <el-button type="primary" icon="el-icon-info" width="" @click="openDetailDialog(scope.row)"/>
-              <el-button type="primary" icon="el-icon-collection" width="" @click="openAncestorDialog(scope.row)"/>
-              <el-button :loading="scope.row.deleteLoading" type="danger" icon="el-icon-delete" width="" @click="deleteDst(scope.row)"/>
+              <el-button class="handle-btn" type="primary" icon="el-icon-info" width="" @click="openDetailDialog(scope.row)">详细</el-button>
+              <el-button class="handle-btn" type="primary" icon="el-icon-discover" width="" @click="openScenicSpotDialog(scope.row)">景点</el-button>
+              <el-button class="handle-btn" type="primary" icon="el-icon-collection" width="" @click="openAncestorDialog(scope.row)">祖先</el-button>
+              <el-button :loading="scope.row.deleteLoading" class="handle-btn" type="danger" icon="el-icon-delete" width="" @click="deleteDst(scope.row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
-
         <pagination v-show="total>0" :total="total" :page-size="listQuery.size" :page.sync="listQuery.page" :limit.sync="listQuery.size" @pagination="getList" />
         <el-dialog :title="$t('global.detail')" :visible.sync="detailDialogVisible">
+          <div class="dialog-footer" style="text-align: right; margin-right: 30px; margin-bottom: 20px;">
+            <!-- <el-button v-if="dialogStatus!=='show'" @click="dialogStatus = 'show'">{{ $t('global.cancel') }}</el-button> -->
+            <el-button :loading="commitLoading" type="primary" @click="saveDst()">
+              {{ dialogStatus==='show'? $t('global.edit'): $t('global.save') }}
+            </el-button>
+          </div>
           <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 600px; margin-left:50px;">
             <el-form-item :label="$t('global.img')" prop="img">
-              <div v-if="dialogStatus==='show'">{{ '1' }}</div>
-              <el-input v-else :placeholder="$t('global.img')" v-model="temp.img"/>
-              <!-- <el-upload
-                class="avatar-uploader"
-                action="https://jsonplaceholder.typicode.com/posts/"
-                :show-file-list="false"
-                :on-success="handleAvatarSuccess"
-                :before-upload="beforeAvatarUpload">
-                <img v-if="imageUrl" :src="imageUrl" class="avatar">
-                <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-              </el-upload> -->
+              <thumbnail-upload v-if="dialogStatus==='edit'" :url="getBucketUrl()" :path="'temp'" :success="fnUploadSuccess">
+                <div slot="main">
+                  <img v-if="temp.img" :src="temp.imgUrl" class="small">
+                  <i v-else class="el-icon-plus avatar-uploader-icon"/>
+                </div>
+              </thumbnail-upload>
+              <img v-else :src="temp.imgUrl" class="small">
             </el-form-item>
             <el-form-item :label="$t('global.name')" prop="name">
               <div v-if="dialogStatus==='show'">{{ temp.name }}</div>
@@ -96,7 +107,24 @@
             </el-form-item>
             <el-form-item :label="$t('travel.parentDst')" prop="parentId">
               <div v-if="dialogStatus==='show'">{{ temp.parentName }}</div>
-              <tree-selector v-else :placeholder="$t('travel.parentPlaceHolder')" :load="loadDialogTreeData" :dialog-loading="treeDialogLoading" :show-prop.sync="temp.parentName" :selecting-node="selectingNode" :value.sync="temp.parentId" node-label="name" node-value="id" height="250px"/>
+              <tree-selector
+                v-else
+                :placeholder="$t('travel.parentPlaceHolder')"
+                :load="loadDialogTreeData"
+                :query-data="loadQueryDstData"
+                :dialog-loading="treeDialogLoading"
+                :show-prop.sync="temp.parentName"
+                :selecting-node="selectingNode"
+                :value.sync="temp.parentId"
+                node-label="name"
+                node-value="id"
+                height="250px"/>
+            </el-form-item>
+            <el-form-item :label="$t('travel.layer')" prop="layer">
+              <div v-if="dialogStatus==='show'">{{ getValue('stateLayer', temp.layer) }}</div>
+              <el-select v-else v-model="temp.layer" :placeholder="$t('travel.layer')" clearable class="filter-item" style="width: 130px">
+                <el-option v-for="item in stateLayerList" :key="item.name" :label="item.value" :value="item.name"/>
+              </el-select>
             </el-form-item>
             <el-form-item :label="$t('travel.position')" :class="dialogStatus==='show'?'amap-dst-show':'amap-dst-edit-item'">
               <!-- <div id="container-map" style="width:500px; height:200px"/>
@@ -143,12 +171,50 @@
               <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.mores" type="textarea"/>
             </el-form-item>
           </el-form>
-          <div slot="footer" class="dialog-footer">
-            <el-button @click="detailDialogVisible = false">{{ $t('global.cancel') }}</el-button>
-            <el-button :loading="commitLoading" type="primary" @click="saveDst()">
-              {{ dialogStatus==='show'? $t('global.edit'): $t('global.confirm') }}
-            </el-button>
+        </el-dialog>
+        <el-dialog :title="$t('travel.scenicSpot')" :visible.sync="scenicSpotDialogVisible" width="1200">
+          <scenic-spot-dialog ref="selectScenicSpotDialog" append-to-body @selected="changeScenicSpotDst"/>
+          <div style="margin-bottom: 20px;">
+            <el-button v-waves type="primary" @click="openSelectScenicSpotDialog">{{ $t('global.add') }}</el-button>
           </div>
+          <el-table
+            v-loading="scenicSpotDialogLoading"
+            :key="tableKey"
+            :data="scenicSpotList"
+            border
+            highlight-current-row
+            style="width: 100%;">
+            <el-table-column :label="$t('table.id')" prop="id" sortable="custom" align="center" width="65">
+              <template slot-scope="scope">
+                {{ scope.$index + 1 }}
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('travel.name')" width="100px" align="center">
+              <template slot-scope="scope">
+                <span>{{ scope.row.name }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('travel.enName')" min-width="100px">
+              <template slot-scope="scope">
+                <span>{{ scope.row.enName }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('travel.type')" min-width="40px">
+              <template slot-scope="scope">
+                <span>{{ getValue('scenicSpotType', scope.row.type) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('travel.intro')" min-width="200px" align="center">
+              <template slot-scope="scope">
+                <span>{{ subInfo(scope.row.subIntro) }}</span>
+              </template>
+            </el-table-column>
+            <!-- <el-table-column :label="$t('table.actions')" align="center" min-width="80" class-name="small-padding fixed-width">
+              <template slot-scope="scope">
+                <el-button :loading="scope.row.removeScenicSpotLoading" type="danger" icon="el-icon-delete" @click="removeScenicSpot(scope.row)">移除</el-button>
+              </template>
+            </el-table-column> -->
+          </el-table>
         </el-dialog>
         <el-dialog v-loading="ancestorLoading" :title="$t('travel.ancestorEdit')" :visible.sync="ancestorDialogVisible">
           <el-table
@@ -180,6 +246,7 @@
                     :load="loadDialogTreeData"
                     :dialog-loading="treeDialogLoading"
                     :selecting-node="selectingAncestorNode"
+                    :query-data="loadQueryDstData"
                     icon="el-icon-info"
                     input-type="button"
                     button-text="插入"
@@ -210,15 +277,18 @@
   Created: 2019/4/10-14:54
 */
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
+import ThumbnailUpload from '@/components/ThumbnailUpload'
 import { Message } from 'element-ui'
 import TreeSelector from '@/components/TreeSelector'
-import { getDstTree, getDstPage, saveDst, deleteDst, getAncestor } from '@/api/travel'
+import ScenicSpotDialog from '@/components/ScenicSpotDialog'
+import { getDstTree, getDstPage, saveDst, deleteDst, getAncestor, getScenicSpotPage, changeScenicSpotDst } from '@/api/travel'
+import { getDictionary, getValue } from '@/utils/dict'
 import waves from '@/directive/waves' // Waves directive
 // import AMap from 'AMap'
 let dstPage
 export default {
   name: 'DestinationList',
-  components: { Pagination, TreeSelector },
+  components: { Pagination, TreeSelector, ThumbnailUpload, ScenicSpotDialog },
   directives: { waves },
   data() {
     return {
@@ -226,21 +296,34 @@ export default {
       dialogStatus: '',
       detailDialogVisible: false,
       ancestorDialogVisible: false,
+      scenicSpotDialogVisible: false,
+      selectScenicSpotDialogVisible: false,
       closeWhenClickMap: true,
       tableKey: 0,
       total: 0,
+      bucket: process.env.BUCKET.PROD_IMG,
+      domain: process.env.OSS_DOMAIN,
       listLoading: false,
       dialogLoading: false,
       commitLoading: false,
+      saveScenicSpotLoading: false,
       ancestorLoading: false,
+      scenicSpotDialogLoading: false,
+      scenicSpotSelectLoading: false,
       treeDialogLoading: false,
       expandAll: false,
+      removeScenicSpotLoading: false,
       dstQuery: {
         name: ''
       },
       data: [],
       list: [],
       ancestorList: [],
+      scenicSpotList: [],
+      selectScenicSpotList: [],
+      stateLayerList: [],
+      scenicSpotTotal: 0,
+      selectScenicSpotTotal: 0,
       ancestorIndex: -1,
       listQuery: {
         size: 10,
@@ -248,6 +331,11 @@ export default {
         parentId: null,
         name: '',
         listChildren: false
+      },
+      scenicSpotQuery: {
+        size: 5,
+        page: 1,
+        name: ''
       },
       temp: {},
       tempAncestor: {},
@@ -276,6 +364,7 @@ export default {
         lng: '',
         lat: ''
       },
+      getValue: getValue,
       citycode: '广州',
       searchOption: {
         city: '广州',
@@ -319,13 +408,44 @@ export default {
     }
   },
   created() {
-    // this.loadTreeNode()
+    const _this = this
     this.getList()
     dstPage = this
+    getDictionary(this.$store, 'scenicSpotType')
+    getDictionary(this.$store, 'stateLayer').then(data => {
+      _this.stateLayerList = data
+    })
   },
   mounted() {
   },
   methods: {
+    removeScenicSpot(row) {
+      console.log(row)
+    },
+    handleAvatarSuccess(res, file) {
+      this.imageUrl = URL.createObjectURL(file.raw)
+    },
+    getScenicSpotType(type) {
+      for (let index = 0; index < this.scenicSpotType.length; index++) {
+        const element = this.scenicSpotType[index]
+        if (element.name === type) {
+          return element.value
+        }
+      }
+      return type
+    },
+    // beforeAvatarUpload(file) {
+    //   const isJPG = file.type === 'image/jpeg'
+    //   const isLt2M = file.size / 1024 / 1024 < 8
+
+    //   if (!isJPG) {
+    //     this.$message.error('上传头像图片只能是 JPG 格式!')
+    //   }
+    //   if (!isLt2M) {
+    //     this.$message.error('上传头像图片大小不能超过 2MB!')
+    //   }
+    //   return isJPG && isLt2M
+    // },
     showCreateDialog() {
       this.detailDialogVisible = true
       this.dialogStatus = 'create'
@@ -392,6 +512,9 @@ export default {
         this.ancestorList.splice(index, 1)
       })
     },
+    openSelectScenicSpotDialog() {
+      this.$refs['selectScenicSpotDialog'].show()
+    },
     openAncestorDialog(row) {
       this.ancestorDialogVisible = true
       this.ancestorLoading = true
@@ -403,10 +526,32 @@ export default {
         this.ancestorLoading = false
       })
     },
+    openScenicSpotDialog(row) {
+      this.scenicSpotDialogVisible = true
+      this.scenicSpotDialogLoading = true
+      this.temp = row
+      getScenicSpotPage({
+        parentDstId: row.id
+      }).then(response => {
+        this.scenicSpotList = response.data.data.records
+        for (let i = 0; i < this.scenicSpotList.length; i++) {
+          const data = this.scenicSpotList[i]
+          data.deleteLoading = false
+          if (data.intro && data.intro.length > 100) {
+            data.subIntro = data.intro.slice(0, 100) + '...'
+          } else {
+            data.subIntro = data.intro
+          }
+        }
+        this.scenicSpotTotal = response.data.data.total
+        this.scenicSpotDialogLoading = false
+      })
+    },
     openDetailDialog(row) {
       this.dialogStatus = 'show'
       this.detailDialogVisible = true
       this.temp = row
+      this.temp.imgUrl = this.getImgUrl(row.img)
       this.mapCenter = [this.temp.longitude, this.temp.latitude]
       this.$nextTick(() => {
         this.initMap()
@@ -457,28 +602,10 @@ export default {
         this.mapCenter = [center.lng, center.lat]
       }
     },
-    /* 搜索 */
-    search() {
-      // const vm = this
-      // AMap.plugin(['AMap.PlaceSearch', 'AMap.Autocomplete'], () => {
-      //   console.log('search')
-      //   var autoOptions = {
-      //     city: vm.citycode,
-      //     input: 'input_id'
-      //   }
-      //   // eslint-disable-next-line no-unused-vars
-      //   const autoComplete = new AMap.Autocomplete(autoOptions)
-      //   // eslint-disable-next-line no-unused-vars
-      //   const placeSearch = new AMap.PlaceSearch({
-      //     city: vm.citycode,
-      //     map: vm.map
-      //   })
-      //   AMap.event.addListener(autoComplete, 'select', e => {
-      //     console.log(e)
-      //   })
-      // })
-    },
     subInfo(str) {
+      if (!str) {
+        return str
+      }
       if (str.length > 100) {
         return str.slice(0, 100) + '...'
       }
@@ -525,6 +652,14 @@ export default {
         }
       })
     },
+    loadQueryDstData(name, resolve) {
+      getDstPage({
+        name: name,
+        size: 100
+      }).then(response => {
+        resolve(response.data.data.records)
+      })
+    },
     loadDialogTreeData(node, resolve) {
       getDstTree(node ? node.data.id : null).then(response => {
         resolve(response.data.data.slice(0, 300))
@@ -549,6 +684,49 @@ export default {
     },
     selectedNode: node => {
       dstPage.ancestorList.splice(dstPage.ancestorIndex, 0, node)
+    },
+    /**
+     * @description [fnUploadSuccess 文件上传成功的函数]
+     * @author   shanshuizinong
+     * @return   {null}  [没有返回]
+     */
+    fnUploadSuccess(response, file, fileList) {
+      if (file) {
+        this.temp.img = file.path
+        this.temp.imgUrl = this.getImgUrl(file.path)
+      }
+    },
+    getImgUrl(img) {
+      if (img) {
+        return 'https://' + this.bucket + '.' + this.domain + '/' + img + '-small'
+      }
+      return null
+    },
+    getBucketUrl() {
+      return 'https://' + this.bucket + '.' + this.domain + '/'
+    },
+    changeScenicSpotDst(selectedScenicSpot) {
+      if (!selectedScenicSpot) return
+      const arr = []
+      for (let index = 0; index < selectedScenicSpot.length; index++) {
+        const scenicSpot = selectedScenicSpot[index]
+        arr.push(scenicSpot.id)
+      }
+      changeScenicSpotDst({
+        dstId: this.temp.id,
+        scenicSpots: arr
+      }).then(response => {
+        this.scenicSpotList = response.data.data.records
+        for (let i = 0; i < this.scenicSpotList.length; i++) {
+          const data = this.scenicSpotList[i]
+          data.deleteLoading = false
+          if (data.intro && data.intro.length > 100) {
+            data.subIntro = data.intro.slice(0, 100) + '...'
+          } else {
+            data.subIntro = data.intro
+          }
+        }
+      })
     }
   }
 }
@@ -570,5 +748,14 @@ export default {
   position: relative;
   top: 25px;
   left: 10px;
+}
+.handle-btn {
+  margin-left: 0px;
+  margin-top: 5px;
+}
+.small {
+  max-width: 380px;
+  max-height: 380px;
+  display: block;
 }
 </style>

@@ -21,7 +21,7 @@ export function stopJob(crawlerName) {
 }
 export function updateCrawlerParam(data) {
   return request({
-    url: '/crawler/param/edit',
+    url: '/crawler/param/modify',
     method: 'post',
     data
   })
@@ -62,7 +62,7 @@ export function addCrawlerParam(crawlerName, data) {
 }
 export function editParam(data) {
   return request({
-    url: '/crawler/param/edit',
+    url: '/crawler/param/modify',
     method: 'post',
     data
   })

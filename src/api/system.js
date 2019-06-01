@@ -21,14 +21,14 @@ export function addDict(data) {
 }
 export function editDictItem(data) {
   return request({
-    url: '/dict/item/edit',
+    url: '/dict/item/modify',
     method: 'put',
     data
   })
 }
 export function editDict(data) {
   return request({
-    url: '/dict/edit',
+    url: '/dict/modify',
     method: 'put',
     data
   })
@@ -44,5 +44,11 @@ export function deleteDict(id) {
   return request({
     url: `/dst/${id}/delete`,
     method: 'delete'
+  })
+}
+export function getOssSignature(bucket) {
+  return request({
+    url: `/oss/${bucket}/signature`,
+    method: 'get'
   })
 }

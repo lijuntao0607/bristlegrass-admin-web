@@ -17,10 +17,23 @@ const travelRouter = {
       meta: { title: 'dstList' }
     },
     {
-      path: 'scenicSpot',
+      path: 'scenic-spot',
       component: () => import('@/views/travel/scenicSpot'),
       name: 'scenicSpot',
       meta: { title: 'scenicSpotList' }
+    },
+    {
+      path: 'route-line',
+      component: () => import('@/views/travel/routeLine'),
+      name: 'routeLine',
+      meta: { title: 'routeLineList' }
+    },
+    {
+      path: 'edit-route-line',
+      component: () => import('@/views/travel/editRouteLine'),
+      name: 'editRouteLine',
+      hidden: true,
+      meta: { title: 'editRouteLine' }
     }
   ]
 }

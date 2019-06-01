@@ -34,7 +34,42 @@ export function parseTime(time, cFormat) {
   })
   return time_str
 }
+export function formatHour(time) {
+  if (!time || time < 0) {
+    return ''
+  }
+  if (time < 60) {
+    return `${time}分钟`
+  }
+  let days, hour, minute
 
+  if (time > 1440) {
+    days = time
+    hour = time % 1440
+    minute = hour % 60
+    hour = parseInt(time / 60)
+  } else {
+    days = 0
+    hour = parseInt(time / 60)
+    minute = time % 60
+  }
+
+  let result = ''
+  if (days !== 0) {
+    result += `${days}天`
+  }
+  if (hour !== 0) {
+    if (minute === 30) {
+      result += `${hour}.5小时`
+    } else {
+      result += `${hour}小时`
+    }
+  }
+  if (minute !== 0 && minute !== 30) {
+    result += `${minute}分`
+  }
+  return result
+}
 export function formatTime(time, option) {
   time = +time * 1000
   const d = new Date(time)

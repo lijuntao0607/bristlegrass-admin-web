@@ -39,6 +39,11 @@ export default {
       }
     }
   },
+  mounted: function() {
+    if (!this.$store.state.user.id) {
+      this.$store.dispatch('GetUserInfo').then()
+    }
+  },
   methods: {
     handleClickOutside() {
       this.$store.dispatch('closeSideBar', { withoutAnimation: false })

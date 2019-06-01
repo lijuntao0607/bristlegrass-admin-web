@@ -17,10 +17,10 @@ const systemRouter = {
       meta: { title: 'dict' }
     },
     {
-      path: 'dict1',
+      path: 'user',
       component: () => import('@/views/system/dict'),
-      name: 'dict1',
-      meta: { title: 'dict' }
+      name: 'user',
+      meta: { title: 'user' }
     }
   ]
 }
