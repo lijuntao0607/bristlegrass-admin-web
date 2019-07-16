@@ -86,6 +86,12 @@ export function getRouteLinePage(query) {
     data: query
   })
 }
+export function getRouteLine(id) {
+  return request({
+    url: `/route-line/${id}/detail`,
+    method: 'get'
+  })
+}
 export function saveRouteLine(data) {
   return request({
     url: '/route-line/save',

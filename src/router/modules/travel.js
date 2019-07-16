@@ -34,6 +34,12 @@ const travelRouter = {
       name: 'editRouteLine',
       hidden: true,
       meta: { title: 'editRouteLine' }
+    },
+    {
+      path: 'TestPage',
+      component: () => import('@/views/travel/testPage'),
+      name: 'testPage',
+      meta: { title: '测试' }
     }
   ]
 }

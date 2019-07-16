@@ -20,23 +20,14 @@
         <el-form-item :label="$t('global.title')" prop="title">
           <el-input :placeholder="$t('global.titlePlaceHolder')" v-model="routeLine.title"/>
         </el-form-item>
-        <el-form-item :label="$t('travel.lineDays')" prop="days">
+        <el-form-item :label="$t('travel.days')" prop="playDays">
           <el-col :span="5">
-            <el-input-number v-model="routeLine.days" :min="1" size="mini"/>
+            <el-input-number v-model="routeLine.playDays" :min="1" size="mini"/>
           </el-col>
           <el-col :span="2">&nbsp;</el-col>
           <el-col :span="7">
             天
           </el-col>
-        </el-form-item>
-        <el-form-item :label="$t('travel.travelCost')">
-          <el-col :span="5"><el-input-number v-model="routeLine.travelCost" :min="0" size="mini"/></el-col>
-          <el-col :span="2">&nbsp;</el-col>
-          <el-col :span="2">元</el-col>
-          <el-col :span="6"><label class="el-form-item__label">{{ $t('travel.ticketCost') }}</label></el-col>
-          <el-col :span="5"><el-input-number v-model="routeLine.ticketCost" :min="0" size="mini"/></el-col>
-          <el-col :span="2">&nbsp;</el-col>
-          <el-col :span="2">元</el-col>
         </el-form-item>
         <el-form-item :label="$t('travel.intro')" prop="twoThousand">
           <el-input :autosize="{ minRows: 2, maxRows: 4}" v-model="routeLine.intro" type="textarea"/>
@@ -56,6 +47,14 @@
       </el-form>
     </el-container>
     <el-container v-if="currentStep === 1" class="container" style="display: flex; flex-direction: column; width: 100%;">
+      <el-form :inline="true" :rules="rules" :model="routeLine" label-position="left" label-width="120px" style="margin:0px 70px;">
+        <el-form-item :label="$t('travel.travelCost')">
+          <el-input-number v-model="routeLine.travelCost1" :min="0" :step="10" size="mini"/>&nbsp;元
+        </el-form-item>
+        <el-form-item :label="$t('travel.ticketCost')">
+          <el-input-number v-model="routeLine.ticketCost1" :min="0" :step="10" size="mini"/>&nbsp;元
+        </el-form-item>
+      </el-form>
       <el-collapse v-model="activeNames" style="width: 90%; margin: 20px;">
         <el-collapse-item v-for="item in routeLine.journeys" :key="item.day" :name="item.day">
           <template slot="title">
@@ -75,7 +74,8 @@
                       {{ getValue('tripMode', dayDst.tripMode) }}{{ formatHour(dayDst.journeyTime) }}
                     </el-link>
                   </span>
-                  <span>{{ dayDst.dstName }}</span>
+                  <span>{{ dayDst.destination.name }}</span>
+                  <el-link :underline="false" icon="el-icon-close" type="primary" @click="removeDst(item, index)"/>
                 </span>
                 <span class="dst-item" @click.stop>
                   <tree-selector :placeholder="$t('travel.parentPlaceHolder')" :query-data="loadQueryDstData" :load="loadDialogTreeData" :dialog-loading="treeDialogLoading" icon="el-icon-plus" style="width: 120px;" input-type="link" button-text="添加目的地" @click="dstClick(item)" @selected="selectedNode"/>
@@ -84,7 +84,7 @@
             </div>
           </template>
           <div style="display: flex; flex-direction: row;">
-            <el-form ref="dataForm" :rules="rules" :model="item" label-position="left" label-width="80px" style="margin:10px 50px; width: 500px;">
+            <el-form ref="dataForm2" :rules="rules" :model="item" label-position="left" label-width="80px" style="margin:10px 50px; width: 500px;">
               <div v-if="!item.introEdit">
                 <label>{{ $t('travel.intro') }} <el-link :underline="false" icon="el-icon-edit" type="primary" @click="item.introEdit=true">编辑</el-link></label>
                 <div>{{ item.intro }}</div>
@@ -180,7 +180,7 @@
                   <template slot-scope="scope">
                     <el-button v-if="!scope.row.edit" class="handle-btn" type="primary" icon="el-icon-edit" @click="scope.row.edit=true" />
                     <el-button v-else class="handle-btn" type="success" icon="el-icon-check" @click="scope.row.edit=false" />
-                    <el-button :loading="scope.row.deleteLoading" class="handle-btn" type="danger" icon="el-icon-delete" @click="removeDayScenicSpot(item, scope.$index)" />
+                    <el-button :loading="scope.row.deleteLoading" class="handle-btn" type="danger" icon="el-icon-delete" @click="removeplayDayscenicSpot(item, scope.$index)" />
                   </template>
                 </el-table-column>
               </el-table>
@@ -197,7 +197,7 @@
       <route-line-detail :route-line="routeLine" />
       <div style="text-align: center; margin-top: 30px;">
         <el-button @click="prevStep">上一步</el-button>
-        <el-button @click="finish">下一步</el-button>
+        <el-button @click="finish">完成</el-button>
       </div>
     </el-container>
     <scenic-spot-dialog ref="selectScenicSpotDialog" append-to-body @selected="changeScenicSpotDst"/>
@@ -205,7 +205,7 @@
   </div>
 </template>
 <script>
-import { getDstPage, getDstTree, saveRouteLine } from '@/api/travel'
+import { getDstPage, getDstTree, saveRouteLine, getRouteLine } from '@/api/travel'
 import ThumbnailUpload from '@/components/ThumbnailUpload'
 import ScenicSpotDialog from '@/components/ScenicSpotDialog'
 import ScenicSpotInfoDialog from '@/components/ScenicSpotInfoDialog'
@@ -230,12 +230,13 @@ export default {
       treeDialogLoading: false,
       dialogStatus: '',
       currentStep: 0,
+      isLeave: false,
       tripModeList: [],
       rules: {
         // img: [
         //   { required: true, message: '请上传首页图', trigger: 'blur' }
         // ],
-        days: [
+        playDays: [
           { required: true, message: '请输入游玩天数', trigger: 'blur' }
         ],
         title: [
@@ -253,11 +254,51 @@ export default {
       _this.tripModeList = data
     })
   },
+  beforeRouteEnter(to, from, next) {
+    next()
+  },
+  beforeRouteLeave(to, from, next) {
+    if (this.isLeave) {
+      next()
+      return
+    }
+    if (!this.routeLine.title && !this.routeLine.days) {
+      next()
+      return
+    }
+    this.$confirm('离开将丢失已编辑的内容,确认离开?', '警告', {
+      confirmButtonText: '离开',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      next()
+    }).catch(() => {
+      next(false)
+    })
+  },
+  mounted() {
+    if (this.$route.query && this.$route.query.routeLine) {
+      const _this = this
+      getRouteLine(this.$route.query.routeLine.id).then(response => {
+        _this.routeLine = response.data.data
+      })
+    }
+  },
   methods: {
     getValue: getValue,
     formatHour: formatHour,
     setValue(obj, valueName, value) {
       this.$set(obj, valueName, value)
+    },
+    removeDst(day, index) {
+      if (!day) return
+      this.$confirm('你确实要删除此行程?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        day.path.splice(index, 1)
+      })
     },
     dstClick(day) {
       this.currentDay = day
@@ -282,7 +323,7 @@ export default {
         console.log(this.routeLine)
       }
     },
-    removeDayScenicSpot(day, index) {
+    removeplayDayscenicSpot(day, index) {
       if (!day) return
       this.$confirm('你确实要删除此行程?', '提示', {
         confirmButtonText: '确定',
@@ -346,6 +387,12 @@ export default {
         if (exists) {
           continue
         }
+        if (!this.routeLine.ticketCost1) {
+          this.routeLine.ticketCost1 = 0
+        }
+        if (scenicSpot.ticketPrice && scenicSpot.ticketPrice > 0) {
+          this.routeLine.ticketCost1 += scenicSpot.ticketPrice
+        }
         list.push({
           scenicSpot: scenicSpot,
           scenicSpotId: scenicSpot.id,
@@ -364,23 +411,40 @@ export default {
         this.$message.error('行程不能为空')
         return
       }
-      for (let i = 0; i < this.routeLine.journeys.length; i++) {
-        const journeyDay = this.routeLine.journeys[i]
-        if (!journeyDay.list || journeyDay.list.length === 0) {
-          this.$message.error('请编写第' + journeyDay.day + '日行程')
-          return
+      if (!this.ticketCost1 || this.ticketCost1 === 0) {
+        let ticketCost = 0
+        for (let i = 0; i < this.routeLine.journeys.length; i++) {
+          const journeyDay = this.routeLine.journeys[i]
+          if (!journeyDay.list || journeyDay.list.length === 0) {
+            this.$message.error('请编写第' + journeyDay.day + '日行程')
+            return
+          }
+          if (!journeyDay.path || journeyDay.path.length === 0) {
+            this.$message.error('请编写第' + journeyDay.day + '日目的地')
+            return
+          }
+          for (let p = 0; p < journeyDay.list.length; p++) {
+            const scenicSpot = journeyDay.list[p].scenicSpot
+            if (scenicSpot.ticketPrice && scenicSpot.ticketPrice > 0) {
+              ticketCost += scenicSpot.ticketPrice
+            }
+          }
         }
-        if (!journeyDay.path || journeyDay.path.length === 0) {
-          this.$message.error('请编写第' + journeyDay.day + '日目的地')
-          return
-        }
+        this.routeLine.ticketCost1 = ticketCost
+      }
+      if (this.routeLine.ticketCost1) {
+        this.routeLine.ticketCost = this.routeLine.ticketCost1 * 100
+      }
+      if (this.routeLine.travelCost1) {
+        this.routeLine.travelCost = this.routeLine.travelCost1 * 100
       }
       this.currentStep += 1
     },
     finish() {
-      console.log(this.routeLine)
+      const _this = this
+      this.isLeave = true
       saveRouteLine(this.routeLine).then(response => {
-        console.log(response.data.data)
+        _this.$router.push({ name: 'routeLine' })
       })
     },
     selectedNode(node) {
@@ -391,6 +455,7 @@ export default {
       dstPath.push({
         dstId: node.id,
         dstName: node.name,
+        destination: node,
         seq: dstPath.length,
         tripMode: '',
         journey: 0
@@ -398,12 +463,15 @@ export default {
     },
     firstStep() {
       const _this = this
+      if (_this.routeLine.title) {
+        _this.routeLine.title = _this.routeLine.title.trim()
+      }
       if (this.currentStep === 0) {
         this.$refs.dataForm.validate(valid => {
           if (valid) {
             _this.currentStep += 1
-            if (_this.routeLine.days > _this.routeLine.journeys.length) {
-              for (let index = _this.routeLine.journeys.length; index < _this.routeLine.days; index++) {
+            if (_this.routeLine.playDays > _this.routeLine.journeys.length) {
+              for (let index = _this.routeLine.journeys.length; index < _this.routeLine.playDays; index++) {
                 _this.routeLine.journeys.push({
                   day: index + 1,
                   intro: '',
@@ -426,9 +494,9 @@ export default {
                 _this.activeNames.push(index + 1)
               }
             } else {
-              const diff = _this.routeLine.journeys.length - _this.routeLine.days
-              _this.routeLine.journeys.splice(_this.routeLine.days, diff)
-              _this.activeNames.splice(_this.routeLine.days, diff)
+              const diff = _this.routeLine.journeys.length - _this.routeLine.playDays
+              _this.routeLine.journeys.splice(_this.routeLine.playDays, diff)
+              _this.activeNames.splice(_this.routeLine.playDays, diff)
             }
           } else {
             return false

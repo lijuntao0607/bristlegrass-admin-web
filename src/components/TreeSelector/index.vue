@@ -143,6 +143,9 @@ export default {
       // this.$emit('input', event.target.value)// 这里$emit调用的是默认的input
     },
     selectedNode() {
+      if (!this.currentNode) {
+        return
+      }
       if (this.selectingNode(this.currentNode)) {
         this.dialogVisible = false
         this.$emit('update:showProp', this.currentNode[this.nodeLabel])

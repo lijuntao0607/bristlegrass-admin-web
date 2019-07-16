@@ -219,7 +219,7 @@ export default {
     tripModePlaceHolder: '请选择交通类型',
     intro: '简介',
     journeyIntro: '行程描述',
-    bestDate: '最佳时间',
+    bestDate: '最佳季节',
     days: '建议游玩时间',
     climate: '当地气候',
     lang: '语言',
@@ -252,7 +252,15 @@ export default {
     ticketCost: '参考门票费用',
     journeyTime: '旅程时间',
     playTime: '游玩时间',
-    tripMode: '交通'
+    playTimeStr: '游玩时间描述',
+    tripMode: '交通',
+    ticketPrice: '参考票价',
+    scenicSpotTicket: '门票详细',
+    openTime: '开放时间',
+    address: '景区地址',
+    phone: '景区电话',
+    website: '景区网站',
+    scenicSpotTraffic: '景区交通'
   },
   dict: {
     dict: '字典',

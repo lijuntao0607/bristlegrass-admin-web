@@ -67,7 +67,7 @@
           </el-table-column> -->
           <el-table-column :label="$t('travel.layer')" min-width="65px" align="center">
             <template slot-scope="scope">
-              <span>{{ getValue('stateLayer', scope.row.layer) }}</span>
+              <span>{{ getValue('destinationLayer', scope.row.layer) }}</span>
             </template>
           </el-table-column>
           <el-table-column :label="$t('table.actions')" align="center" min-width="150" class-name="small-padding fixed-width">
@@ -121,7 +121,7 @@
                 height="250px"/>
             </el-form-item>
             <el-form-item :label="$t('travel.layer')" prop="layer">
-              <div v-if="dialogStatus==='show'">{{ getValue('stateLayer', temp.layer) }}</div>
+              <div v-if="dialogStatus==='show'">{{ getValue('destinationLayer', temp.layer) }}</div>
               <el-select v-else v-model="temp.layer" :placeholder="$t('travel.layer')" clearable class="filter-item" style="width: 130px">
                 <el-option v-for="item in stateLayerList" :key="item.name" :label="item.value" :value="item.name"/>
               </el-select>
@@ -412,7 +412,7 @@ export default {
     this.getList()
     dstPage = this
     getDictionary(this.$store, 'scenicSpotType')
-    getDictionary(this.$store, 'stateLayer').then(data => {
+    getDictionary(this.$store, 'destinationLayer').then(data => {
       _this.stateLayerList = data
     })
   },

@@ -74,102 +74,8 @@
             </template>
           </el-table-column>
         </el-table>
-
         <pagination v-show="total>0" :total="total" :page-size="listQuery.size" :page.sync="listQuery.page" :limit.sync="listQuery.size" @pagination="getList" />
-
-        <el-dialog :title="$t('global.detail')" :visible.sync="detailDialogVisible">
-          <div class="dialog-footer" style="text-align: right; margin-right: 30px; margin-bottom: 20px;">
-            <!-- <el-button v-if="dialogStatus!=='show'" @click="dialogStatus = 'show'">{{ $t('global.cancel') }}</el-button> -->
-            <el-button :loading="commitLoading" type="primary" @click="saveScenicSpot()">
-              {{ dialogStatus==='show'? $t('global.edit'): $t('global.save') }}
-            </el-button>
-          </div>
-          <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 600px; margin-left:50px;">
-            <el-form-item :label="$t('global.img')" prop="img">
-              <thumbnail-upload v-if="dialogStatus==='edit' || dialogStatus==='create'" :url="getBucketUrl()" :path="'temp'" :success="fnUploadSuccess">
-                <div slot="main">
-                  <img v-if="temp.img" :src="temp.imgUrl" class="small">
-                  <i v-else class="el-icon-plus avatar-uploader-icon"/>
-                </div>
-              </thumbnail-upload>
-              <img v-else :src="temp.imgUrl" class="small">
-            </el-form-item>
-            <el-form-item :label="$t('global.name')" prop="name">
-              <div v-if="dialogStatus==='show'">{{ temp.name }}</div>
-              <el-input v-else :placeholder="$t('travel.namePlaceHolder')" v-model="temp.name"/>
-            </el-form-item>
-            <el-form-item :label="$t('global.enName')" prop="fifty">
-              <div v-if="dialogStatus==='show'">{{ temp.enName }}</div>
-              <el-input v-else :placeholder="$t('travel.enNamePlaceHolder')" v-model="temp.enName"/>
-            </el-form-item>
-            <el-form-item :label="$t('travel.parentDst')" prop="destinationId">
-              <div v-if="dialogStatus==='show'">{{ temp.destinationName }}</div>
-              <tree-selector
-                v-else
-                :placeholder="$t('travel.parentPlaceHolder')"
-                :load="loadDialogTreeData"
-                :dialog-loading="treeDialogLoading"
-                :show-prop.sync="temp.destinationName"
-                :selecting-node="selectingNode"
-                :value.sync="temp.destinationId"
-                node-label="name"
-                node-value="id"
-                height="350px"
-                @selected="destinationSelected"
-              />
-            </el-form-item>
-            <el-form-item :label="$t('travel.parentDst')" prop="destinationId">
-              <div v-if="dialogStatus==='show'">{{ temp.parentName }}</div>
-              <el-select v-else v-model="temp.parentId" :placeholder="$t('travel.parentScenicSpot')" clearable class="filter-item">
-                <el-option v-for="item in scenicSpotList" :key="item.name" :label="item.value" :value="item.name"/>
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('travel.position')" :class="dialogStatus==='show'?'amap-dst-show':'amap-dst-edit-item'">
-              <!-- <div id="container-map" style="width:500px; height:200px"/>
-              <button @click="addTool">加载</button>
-              <input id="input_id" type="text">
-              <span>{{ chosePosition }}</span> -->
-              <div v-if="dialogStatus==='show'">{{ temp.latitude? (temp.latitude+','+temp.longitude): '' }}</div>
-              <el-tooltip v-else :disabled="dialogStatus==='show'" content="右键点击地图更新定位坐标" placement="right" effect="light">
-                <el-input :value="temp.latitude? (temp.latitude+','+temp.longitude): ''"/>
-              </el-tooltip>
-              <el-amap-search-box v-if="dialogStatus!=='show'" :search-option="searchOption" :on-search-result="onSearchResult" class="search-box"/>
-              <el-amap :center="mapCenter" :zoom="12" :events="mapEvents" :class="dialogStatus==='show'?'amap-dst-show':'amap-dst-edit'" vid="amapDemo">
-                <el-amap-marker :position="mapCenter" vid="component-marker"/>
-                <el-amap-info-window ref="dst-pos-info-window" :visible="showPosWindow" :position="newPosition" :close-when-click-map="closeWhenClickMap">
-                  <div :style="slotStyle">
-                    <b>确定将{{ temp.name }}定位更新</b>
-                    <button @click="confirmPosition">{{ $t('global.confirm') }}</button>
-                  </div>
-                </el-amap-info-window>
-              </el-amap>
-            </el-form-item>
-            <el-form-item :label="$t('travel.intro')" prop="twoThousand">
-              <div v-if="dialogStatus==='show'">{{ temp.intro }}</div>
-              <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.intro" type="textarea"/>
-            </el-form-item>
-            <el-form-item :label="$t('travel.bestDate')" prop="twoThousand">
-              <div v-if="dialogStatus==='show'">{{ temp.bestDate }}</div>
-              <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.bestDate" type="textarea"/>
-            </el-form-item>
-            <el-form-item :label="$t('travel.days')" prop="twoThousand">
-              <div v-if="dialogStatus==='show'">{{ temp.days }}</div>
-              <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.days" type="textarea"/>
-            </el-form-item>
-            <el-form-item :label="$t('travel.climate')" prop="twoThousand">
-              <div v-if="dialogStatus==='show'">{{ temp.climate }}</div>
-              <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.climate" type="textarea"/>
-            </el-form-item>
-            <el-form-item :label="$t('travel.lang')" prop="twoThousand">
-              <div v-if="dialogStatus==='show'">{{ temp.lang }}</div>
-              <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.lang" type="textarea"/>
-            </el-form-item>
-            <el-form-item :label="$t('travel.mores')" prop="twoThousand">
-              <div v-if="dialogStatus==='show'">{{ temp.mores }}</div>
-              <el-input v-else :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.mores" type="textarea"/>
-            </el-form-item>
-          </el-form>
-        </el-dialog>
+        <scenic-spot-info-dialog ref="scenicSpotInfoDialog" editable />
       </el-main>
     </el-container>
   </div>
@@ -185,20 +91,19 @@ import Pagination from '@/components/Pagination' // Secondary package based on e
 import { Message } from 'element-ui'
 import TreeSelector from '@/components/TreeSelector'
 import ScenicSpotDialog from '@/components/ScenicSpotDialog'
-import { getDstTree, getScenicSpotPage, saveScenicSpot, deleteScenicSpot } from '@/api/travel'
+import ScenicSpotInfoDialog from '@/components/ScenicSpotInfoDialog'
+import { getDstTree, getScenicSpotPage, deleteScenicSpot } from '@/api/travel'
 import waves from '@/directive/waves' // Waves directive
 // import AMap from 'AMap'
 let dstPage
 export default {
   name: 'ScenicSpotList',
-  components: { Pagination, TreeSelector, ThumbnailUpload, ScenicSpotDialog },
+  components: { Pagination, TreeSelector, ThumbnailUpload, ScenicSpotDialog, ScenicSpotInfoDialog },
   directives: { waves },
   data() {
     return {
       map: null,
       dialogStatus: '',
-      detailDialogVisible: false,
-      closeWhenClickMap: true,
       tableKey: 0,
       total: 0,
       listLoading: false,
@@ -218,7 +123,7 @@ export default {
       listQuery: {
         size: 10,
         page: 1,
-        destinationId: null,
+        dstId: null,
         name: '',
         type: ''
       },
@@ -237,58 +142,8 @@ export default {
         twoThousand: [{ min: 0, max: 2000, message: '长度必须小于2000字符', trigger: 'blur' }],
         img: [{ min: 0, max: 700, message: '长度必须小于700字符', trigger: 'blur' }]
       },
-      currentPosition: {
-        location: '',
-        lng: '',
-        lat: ''
-      },
-      /* 选取的位置 */
-      chosePosition: {
-        location: '',
-        lng: '',
-        lat: ''
-      },
-      citycode: '广州',
-      searchOption: {
-        city: '广州',
-        citylimit: false,
-        pageSize: 5,
-        pageIndex: 2,
-        lang: 'zh_cn'
-      },
       scenicSpotList: [],
-      mapCenter: [121.59996, 31.197646],
-      mapEvents: {
-        init: (o) => {
-          // console.log(o.getCenter())
-          // console.log(this.$refs.map.$$getInstance())
-          // o.getCity(result => {
-          //   console.log(result)
-          // })
-        },
-        'moveend': () => {
-        },
-        'zoomchange': () => {
-        },
-        'rightclick': (e) => {
-          if (!e.lnglat || this.dialogStatus === 'show') {
-            return
-          }
-          const mapWindow = this.$refs['dst-pos-info-window']
-          mapWindow.$amapComponent.close()
-          mapWindow.$amapComponent.open(mapWindow.$amap, { latitude: mapWindow.position[0], longitude: mapWindow.position[1] })
-          this.showPosWindow = true
-          this.newPosition = [e.lnglat.lng, e.lnglat.lat]
-        }
-      },
-      showPosWindow: false,
-      newPosition: [121.59996, 31.197646],
-      slotStyle: {
-        padding: '2px 8px',
-        background: '#eee',
-        color: '#333',
-        border: '1px solid #aaa'
-      }
+      showPosWindow: false
     }
   },
   created() {
@@ -317,58 +172,24 @@ export default {
         return
       }
       getScenicSpotPage({
-        destinationId: this.temp.destinationId,
+        dstId: this.temp.destinationId,
         size: 100
       }).then(response => {
         this.scenicSpotList = response.data.data.records
       })
     },
     showCreateDialog() {
-      this.detailDialogVisible = true
-      this.dialogStatus = 'create'
       this.temp = {}
       this.newPosition = this.mapCenter
-      this.closeMapInfoWindow()
-    },
-    closeMapInfoWindow() {
-      const mapWindow = this.$refs['dst-pos-info-window']
-      if (mapWindow) {
-        mapWindow.$amapComponent.close()
-      }
-    },
-    saveScenicSpot() {
-      if (this.dialogStatus !== 'edit') {
-        this.dialogStatus = 'edit'
-      } else {
-        this.$refs.dataForm.validate(valid => {
-          if (valid) {
-            this.commitLoading = true
-            saveScenicSpot(this.temp).then(response => {
-              this.getList()
-              this.commitLoading = this.detailDialogVisible = false
-            }, () => {
-              this.commitLoading = false
-            })
-          } else {
-            this.$message.warning('操作失败，请检查')
-            return false
-          }
-        })
-      }
-    },
-    confirmPosition() {
-      this.temp.longitude = this.newPosition[0]
-      this.temp.latitude = this.newPosition[1]
-      this.mapCenter = this.newPosition
-      this.closeMapInfoWindow()
+      // this.closeMapInfoWindow()
     },
     openDetailDialog(row) {
       this.dialogStatus = 'show'
-      this.detailDialogVisible = true
+      this.$refs['scenicSpotInfoDialog'].show(row.id)
       this.temp = row
       this.temp.imgUrl = this.getImgUrl(row.img)
       this.mapCenter = [this.temp.longitude, this.temp.latitude]
-      this.closeMapInfoWindow()
+      // this.closeMapInfoWindow()
     },
     deleteScenicSpot(row) {
       row.deleteLoading = true
@@ -380,14 +201,10 @@ export default {
         row.deleteLoading = false
       })
     },
-    onSearchResult(pois) {
-      console.log(pois)
-      if (pois.length > 0) {
-        const center = {
-          lng: pois[0].lng,
-          lat: pois[0].lat
-        }
-        this.mapCenter = [center.lng, center.lat]
+    closeMapInfoWindow() {
+      const mapWindow = this.$refs['dst-pos-info-window']
+      if (mapWindow) {
+        mapWindow.$amapComponent.close()
       }
     },
     subInfo(str) {
@@ -400,12 +217,12 @@ export default {
       this.$message.info(row.event)
     },
     handleNodeClick(node) {
-      this.listQuery.destinationId = node.id
+      this.listQuery.dstId = node.id
       this.listQuery.name = ''
       this.getList()
     },
     query() {
-      this.listQuery.destinationId = null
+      this.listQuery.dstId = null
       this.getList()
     },
     getList() {

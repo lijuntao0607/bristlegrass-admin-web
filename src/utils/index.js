@@ -70,6 +70,21 @@ export function formatHour(time) {
   }
   return result
 }
+export function formatStr(str) {
+  if (!str) {
+    return '无'
+  }
+  return str
+}
+export function formatNumber(value) {
+  if (typeof value !== 'number') {
+    return value
+  }
+  if (value < 0) {
+    return '无'
+  }
+  return (value / 100).toFixed(2)
+}
 export function formatTime(time, option) {
   time = +time * 1000
   const d = new Date(time)
