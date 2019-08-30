@@ -55,9 +55,23 @@
           <el-input-number v-model="routeLine.ticketCost1" :min="0" :step="10" size="mini"/>&nbsp;元
         </el-form-item>
       </el-form>
+      <div>
+        <el-tag v-for="(tag) in tags" :key="tag" closable type="info" class="tag" effect="dark" @close="handleClose(tag)">{{ tag }}</el-tag>
+        <el-input
+          v-if="inputVisible"
+          ref="saveTagInput"
+          v-model="inputValue"
+          size="small"
+          class="input-new-tag"
+          @keyup.enter.native="handleInputConfirm"
+          @blur="handleInputConfirm"
+        />
+        <el-button v-else class="button-new-tag" size="small" @click="showInput">+ New Tag</el-button>
+      </div>
       <el-collapse v-model="activeNames" style="width: 90%; margin: 20px;">
-        <el-collapse-item v-for="item in routeLine.journeys" :key="item.day" :name="item.day">
+        <el-collapse-item v-for="(item, dayIndex) in routeLine.journeys" :key="item.day" :name="item.day">
           <template slot="title">
+            <div style="display: none;">{{ dayIndex }}</div>
             <div style="display: flex; width: 80%;">
               <div @click.stop><el-link :underline="false" icon="el-icon-delete" type="danger" style="padding: 0px 10px;" @click="removeDay(item.day)">删除</el-link></div>
               <div style="flex-grow: 1; text-align: center; display: flex; margin-left: 200px; padding-left: 20px;">
@@ -74,7 +88,7 @@
                       {{ getValue('tripMode', dayDst.tripMode) }}{{ formatHour(dayDst.journeyTime) }}
                     </el-link>
                   </span>
-                  <span>{{ dayDst.destination.name }}</span>
+                  <span>{{ dayDst.destination?dayDst.destination.name: '' }}</span>
                   <el-link :underline="false" icon="el-icon-close" type="primary" @click="removeDst(item, index)"/>
                 </span>
                 <span class="dst-item" @click.stop>
@@ -222,6 +236,7 @@ export default {
         journeys: []
       },
       activeNames: [
+        '1'
       ],
       currentDay: {},
       bucket: process.env.BUCKET.PROD_IMG,
@@ -232,6 +247,9 @@ export default {
       currentStep: 0,
       isLeave: false,
       tripModeList: [],
+      tags: [],
+      inputVisible: false,
+      inputValue: '',
       rules: {
         // img: [
         //   { required: true, message: '请上传首页图', trigger: 'blur' }
@@ -281,6 +299,9 @@ export default {
       const _this = this
       getRouteLine(this.$route.query.routeLine.id).then(response => {
         _this.routeLine = response.data.data
+        if (_this.routeLine) {
+          _this.tags = _this.routeLine.tags.split('\r\n')
+        }
       })
     }
   },
@@ -289,6 +310,23 @@ export default {
     formatHour: formatHour,
     setValue(obj, valueName, value) {
       this.$set(obj, valueName, value)
+    },
+    handleClose(tag) {
+      this.tags.splice(this.tags.indexOf(tag), 1)
+    },
+    showInput() {
+      this.inputVisible = true
+      this.$nextTick(_ => {
+        this.$refs.saveTagInput.$refs.input.focus()
+      })
+    },
+    handleInputConfirm() {
+      const inputValue = this.inputValue
+      if (inputValue) {
+        this.tags.push(inputValue)
+      }
+      this.inputVisible = false
+      this.inputValue = ''
     },
     removeDst(day, index) {
       if (!day) return
@@ -411,6 +449,15 @@ export default {
         this.$message.error('行程不能为空')
         return
       }
+      let tags = ''
+      for (let i = 0; i < this.tags.length; i++) {
+        tags += this.tags[i]
+        if (i < this.tags.length - 1) {
+          tags += '\r\n'
+        }
+      }
+      this.routeLine.tags = tags
+      this.setValue(this.routeLine, 'routeLine', tags)
       if (!this.ticketCost1 || this.ticketCost1 === 0) {
         let ticketCost = 0
         for (let i = 0; i < this.routeLine.journeys.length; i++) {
@@ -442,7 +489,15 @@ export default {
     },
     finish() {
       const _this = this
+      let tags = ''
+      for (let i = 0; i < this.tags.length; i++) {
+        tags += this.tags[i]
+        if (i < this.tags.length - 1) {
+          tags += '\r\n'
+        }
+      }
       this.isLeave = true
+      this.routeLine.tags = tags
       saveRouteLine(this.routeLine).then(response => {
         _this.$router.push({ name: 'routeLine' })
       })
@@ -517,5 +572,20 @@ export default {
 }
 .dst-item {
   margin-left: 20px;
+}
+.tag {
+  margin-left: 10px;
+}
+.button-new-tag {
+  margin-left: 10px;
+  height: 32px;
+  line-height: 30px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.input-new-tag {
+  width: 90px;
+  margin-left: 10px;
+  vertical-align: bottom;
 }
 </style>

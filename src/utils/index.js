@@ -43,11 +43,11 @@ export function formatHour(time) {
   }
   let days, hour, minute
 
-  if (time > 1440) {
-    days = time
+  if (time >= 1440) {
+    days = time / 1440
     hour = time % 1440
     minute = hour % 60
-    hour = parseInt(time / 60)
+    // minute = parseInt(time / 60)
   } else {
     days = 0
     hour = parseInt(time / 60)

@@ -4,6 +4,7 @@
       <el-input :placeholder="$t('travel.queryNamePlaceholder')" v-model="listQuery.name" style="width: 200px;" class="filter-item" clearable @keyup.enter.native="query"/>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="query">{{ $t('table.search') }}</el-button>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-plus"><router-link to="/travel/edit-route-line">新建路线</router-link></el-button>
+      <el-button v-waves :loading="refreshLoading" class="filter-item" type="primary" icon="el-icon-refresh-left" @click="refreshRouteLineData">刷新路线数据状态</el-button>
     </div>
     <el-container>
       <el-aside>
@@ -85,9 +86,10 @@ import { Message } from 'element-ui'
 import TreeSelector from '@/components/TreeSelector'
 import RouteLineDetail from '@/components/RouteLineDetail'
 // import ScenicSpotInfoDialog from '@/components/ScenicSpotInfoDialog'
-import { getDstTree, getRouteLinePage, getRouteLine } from '@/api/travel'
+import { getDstTree, getRouteLinePage, getRouteLine, refreshRouteLine } from '@/api/travel'
 import waves from '@/directive/waves' // Waves directive
 import { formatNumber } from '@/utils/index'
+import { getDictionary } from '@/utils/dict'
 // import AMap from 'AMap'
 let dstPage
 export default {
@@ -108,6 +110,7 @@ export default {
       domain: process.env.OSS_DOMAIN,
       data: [],
       list: [],
+      refreshLoading: false,
       listQuery: {
         size: 10,
         page: 1,
@@ -130,6 +133,7 @@ export default {
     // this.$store.getters.getDict('scenicSpotType', data => {
     //   _this.scenicSpotType = data
     // })
+    getDictionary(this.$store, 'tripMode')
     this.getList()
     dstPage = this
   },
@@ -167,6 +171,13 @@ export default {
     query() {
       this.listQuery.dstId = null
       this.getList()
+    },
+    refreshRouteLineData() {
+      this.refreshLoading = true
+      refreshRouteLine().then(response => {
+        Message.success('操作成功')
+        this.refreshLoading = false
+      })
     },
     getList() {
       this.listLoading = true

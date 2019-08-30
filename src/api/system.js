@@ -52,3 +52,10 @@ export function getOssSignature(bucket) {
     method: 'get'
   })
 }
+export function getFeedbackPage(data) {
+  return request({
+    url: `/feedback/page`,
+    method: 'post',
+    data
+  })
+}

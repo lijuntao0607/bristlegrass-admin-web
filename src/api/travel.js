@@ -105,3 +105,9 @@ export function deleteRouteLine(id) {
     method: 'delete'
   })
 }
+export function refreshRouteLine() {
+  return request({
+    url: `/route-line/data/refresh`,
+    method: 'post'
+  })
+}

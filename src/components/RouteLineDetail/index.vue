@@ -9,6 +9,9 @@
         </span>
         <img v-if="routeLine.img" :src="routeLine.imgUrl" class="small">
       </div>
+      <div>
+        <el-tag v-for="(tag) in tags" :key="tag" type="info" class="tag" effect="dark">{{ tag }}</el-tag>
+      </div>
       <div style="display: flex; margin: 20px 0px;">
         <span class="cost-box">
           <i class="el-icon-ship" style="font-size: 30px; margin-left: 5px;"/>
@@ -61,7 +64,7 @@
                   <span>
                     <span v-for="(dayDst,index) in day.path" :key="day.day + '_' + dayDst.dstId">
                       <span v-if="index !== 0" class="day-title-journey">{{ getValue('tripMode', dayDst.tripMode) }}{{ formatHour(dayDst.journeyTime) }}</span>
-                      <span class="day-title-dst">{{ dayDst.destination.name }}</span>
+                      <span class="day-title-dst">{{ dayDst.destination?dayDst.destination.name: '' }}</span>
                     </span>
                   </span>
                 </div>
@@ -73,7 +76,7 @@
                     <span class="day-scenic-spot"><i class="el-icon-location day-scenic-spot-icon"/>
                       <el-link :underline="false" @click="openScenicSpotInfoDialog(dayScenicSpot.scenicSpot.id)">{{ dayScenicSpot.scenicSpot.name }}</el-link>
                     </span>
-                    <span class="day-journey-time">{{ dayScenicSpot.playTime? '' : '(' + formatHour(dayScenicSpot.playTime) + ')' }}</span>
+                    <span class="day-journey-time">{{ dayScenicSpot.playTime? '(' + formatHour(dayScenicSpot.playTime) + ')' : '' }}</span>
                   </span>
                 </div>
                 <div v-if="day.traffic" class="day-title">
@@ -155,6 +158,7 @@ export default {
   },
   data() {
     return {
+      tags: [],
       mapEvents: {
         init: (o) => {
           // console.log(o.getCenter())
@@ -170,6 +174,11 @@ export default {
         'rightclick': (e) => {
         }
       }
+    }
+  },
+  watch: {
+    routeLine(oldData, newData) {
+      this.tags = this.routeLine.tags.split('\r\n')
     }
   },
   created() {
@@ -351,5 +360,8 @@ export default {
   position: absolute;
   margin-left: -9px;
   margin-top: 17px;
+}
+.tag {
+  margin-left: 10px;
 }
 </style>
