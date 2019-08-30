@@ -113,6 +113,7 @@ export default {
   },
   created() {
     // window.addEventListener('hashchange', this.afterQRScan)
+    console.log(process.env.ENV_CONFIG)
   },
   destroyed() {
     // window.removeEventListener('hashchange', this.afterQRScan)
